@@ -1,6 +1,6 @@
 # Interview Code
 
-At Twitter I often asked a simple question, render a tweet given the text and an unordered list of its entities. Each
+At Twitter I often asked a simple question, render a tweet given the text and an unordered list of its entities (hashtags, URLs, @mentions). Each
 entity is represented by the replacement text, a start index and an end index. The classic solution is to sort the
 list of entities by their start index and build up the solution by iterating over the list grabbing text from the
 tweet and text from the replacement as you go. It was surprising that there were many people that could not get that
