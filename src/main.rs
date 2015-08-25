@@ -2,7 +2,6 @@
 extern crate test;
 extern crate core;
 
-use std::cmp::Ordering;
 use core::str::StrExt;
 
 #[derive(Clone)]
@@ -14,14 +13,9 @@ pub struct Entity {
 
 fn render(text: &str, entities: &mut Vec<Entity>) -> String {
 	let mut sb = String::new();
-	entities.sort_by(|e1, e2| if e1.start < e2.start {
-		Ordering::Less
-	} else if e1.start > e2.start {
-		Ordering::Greater
-	} else {
-		Ordering::Equal
-	});
-	let mut pos = 0 as usize;
+	entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
+
+  let mut pos = 0 as usize;
 	for entity in entities {
 		sb.push_str(text.slice_chars(pos, entity.start));
 		sb.push_str(entity.html.as_str());
