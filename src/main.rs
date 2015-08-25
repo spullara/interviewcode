@@ -12,10 +12,9 @@ pub struct Entity {
     html: String
 }
 
-fn render(text: String, entities: &mut Vec<Entity>) -> String {
-	let mut mutentities = entities.to_vec();
+fn render(text: &str, entities: &mut Vec<Entity>) -> String {
 	let mut sb = String::new();
-	mutentities.sort_by(|e1, e2| if e1.start < e2.start {
+	entities.sort_by(|e1, e2| if e1.start < e2.start {
 		Ordering::Less
 	} else if e1.start > e2.start {
 		Ordering::Greater
@@ -23,7 +22,7 @@ fn render(text: String, entities: &mut Vec<Entity>) -> String {
 		Ordering::Equal
 	});
 	let mut pos = 0 as usize;
-	for entity in mutentities {
+	for entity in entities {
 		sb.push_str(text.slice_chars(pos, entity.start));
 		sb.push_str(entity.html.as_str());
 		pos = entity.end;
@@ -38,7 +37,7 @@ fn main() {
 }
 
 pub fn classic(entities: &mut Vec<Entity>) -> String {
-    render("Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!".to_string(), entities)
+    render("Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!", entities)
 }
 
 pub fn entities() -> Vec<Entity> {
