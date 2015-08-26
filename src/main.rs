@@ -1,5 +1,6 @@
-#![feature(convert, test, core, core_str_ext, vec_push_all)]
-extern crate test;
+#![feature(convert, core, core_str_ext, vec_push_all)]
+#![cfg_attr(test, feature(test))]
+
 extern crate core;
 
 use core::str::StrExt;
@@ -21,8 +22,15 @@ pub struct DecodedEntity {
     html: Vec<char>,
 }
 
+impl Entity {
+    fn decode(&self) -> DecodedEntity {
+        DecodedEntity {start: self.start, end: self.end, html: self.html.chars().collect()}
+    }
+}
+
+
 unsafe fn render_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
-    let mut sb = String::new();
+    let mut sb = String::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
@@ -35,9 +43,22 @@ unsafe fn render_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
     sb
 }
 
-fn render(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
-    // Initial capacity based on observation that entities tend to add just 2 chars
-    let mut sb: Vec<char> = Vec::with_capacity(text.len()+entities.len()*2);
+fn render(text: &str, entities: &mut Vec<Entity>) -> String {
+    let mut sb = String::with_capacity(text.len()*2);
+    entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
+
+    let mut pos = 0 as usize;
+    for entity in entities {
+        sb.push_str(text.slice_chars(pos, entity.start));
+        sb.push_str(entity.html.as_str());
+        pos = entity.end;
+    }
+    sb.push_str(text.slice_chars(pos, text.chars().count()));
+    sb
+}
+
+fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
+    let mut sb: Vec<char> = Vec::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
@@ -52,7 +73,7 @@ fn render(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
 
 
 fn main() {
-    let result = classic(&ASCII_TEXT.chars().collect(), &mut decoded_entities());
+    let result = classic(&ASCII_TEXT, &mut entities());
     println!("Result: {}", result);
 }
 
@@ -63,8 +84,12 @@ pub fn classic_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
     }
 }
 
-pub fn classic(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
+pub fn classic(text: &str, entities: &mut Vec<Entity>) -> String {
     render(&text, entities)
+}
+
+pub fn classic_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
+    render_chars(&text, entities)
 }
 
 pub fn entities() -> Vec<Entity> {
@@ -81,15 +106,53 @@ pub fn entities() -> Vec<Entity> {
 }
 
 pub fn decoded_entities() -> Vec<DecodedEntity> {
-    entities().into_iter().map( |e: Entity|
-        DecodedEntity {start: e.start, end: e.end, html: e.html.chars().collect()}
-    ).collect()
+    entities().into_iter().map( |e| e.decode() ).collect()
 }
+
+
+#[cfg(test)] extern crate rand;
+#[cfg(test)] extern crate test;
 
 #[cfg(test)]
 mod rendertest {
     use super::*;
+    use rand::{self,Rng};
     use test::Bencher;
+
+    fn generate_entities() -> Vec<Vec<Entity>> {
+        let mut rng = rand::thread_rng();
+        let mut entities_list: Vec<Vec<Entity>> = Vec::with_capacity(1000);
+
+        for _ in (0..1000) {
+            let total = rng.gen::<usize>() % 10;
+            let mut indices = Vec::with_capacity(total);
+            for _ in 0..(total*2) {
+                loop {
+                    let index = rng.gen::<usize>() % ASCII_TEXT.len();
+                    if !indices.contains(&index) {
+                        indices.push(index);
+                        break;
+                    }
+                }
+            }
+
+            indices.sort();
+            let entities = indices.chunks(2).map(|chunk| {
+                let (start, end) = (chunk[0], chunk[1]);
+                let length = end - start;
+                Entity {start: start, end: end, html: (0..length).map(|_| "X").collect()}
+            });
+            entities_list.push(entities.collect());
+        }
+
+        entities_list
+    }
+
+    fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
+        generate_entities().into_iter().map(|entries| {
+            entries.into_iter().map(|e| { e.decode() } ).collect()
+        }).collect()
+    }
 
     #[test]
     fn correctness_ascii() {
@@ -98,25 +161,42 @@ mod rendertest {
     }
 
     #[test]
+    fn correctness_chars() {
+        let result = "Attend 次次 hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+        assert_eq!(result, classic_chars(&UNICODE_TEXT.chars().collect(), &mut decoded_entities()))
+    }
+
+    #[test]
     fn correctness() {
         let result = "Attend 次次 hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic(&UNICODE_TEXT.chars().collect(), &mut decoded_entities()))
+        assert_eq!(result, classic(&UNICODE_TEXT, &mut entities()))
     }
 
     #[bench]
     fn bench_replacement_ascii(b: &mut Bencher) {
-        let entities = &mut entities();
+        let mut entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| {
-            classic_ascii(ASCII_TEXT, entities)
+            classic_ascii(ASCII_TEXT, &mut entities_list[index_iter.next().unwrap()])
         });
     }
 
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
-        let entities = &mut decoded_entities();
+        let mut entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
+        b.iter(|| {
+            classic(UNICODE_TEXT, &mut entities_list[index_iter.next().unwrap()])
+        });
+    }
+
+    #[bench]
+    fn bench_replacement_chars(b: &mut Bencher) {
+        let mut entities_list = generate_decoded_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
-            classic(&decoded_text, entities)
+            classic_chars(&decoded_text, &mut entities_list[index_iter.next().unwrap()])
         });
     }
 }

@@ -3,3 +3,6 @@
 name = "interviewcode"
 version = "0.0.1"
 authors = [ "Sam Pullara <sam@sampullara.com>" ]
+
+[dev-dependencies]
+rand = "*"
