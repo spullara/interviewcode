@@ -78,10 +78,8 @@ fn main() {
 }
 
 
-pub fn classic_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
-    unsafe {
-        render_ascii(text, entities)
-    }
+pub unsafe fn classic_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
+    render_ascii(text, entities)
 }
 
 pub fn classic(text: &str, entities: &mut Vec<Entity>) -> String {
@@ -157,7 +155,7 @@ mod rendertest {
     #[test]
     fn correctness_ascii() {
         let result = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic_ascii(ASCII_TEXT, &mut entities()))
+        assert_eq!(result, unsafe { classic_ascii(ASCII_TEXT, &mut entities()) })
     }
 
     #[test]
@@ -177,7 +175,9 @@ mod rendertest {
         let mut entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| {
-            classic_ascii(ASCII_TEXT, &mut entities_list[index_iter.next().unwrap()])
+            unsafe {
+                classic_ascii(ASCII_TEXT, &mut entities_list[index_iter.next().unwrap()])
+                }
         });
     }
 
