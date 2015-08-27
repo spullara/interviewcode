@@ -109,18 +109,17 @@ public class RendererBenchmarkTest {
     List<Set<Entity>> entitiesList = createEntriesList();
 
     {
-      for (int j = 0; j < 3; j++) {
-        for (int i = 0; i < 2000; i++) {
+      for (int j = 0; j < 5; j++) {
+        for (int i = 0; i < 10000; i++) {
           renderer.render(text, entitiesList.get(i % 1000));
         }
         long start = System.currentTimeMillis();
         for (int i = 0; i < 1000000; i++) {
           renderer.render(text, entitiesList.get(i % 1000));
         }
-        System.out.println(renderer.getClass().getSimpleName() + ": " + (System.currentTimeMillis() - start));
+        System.out.println(renderer.getClass().getSimpleName() + ": " + (System.currentTimeMillis() - start) + " ns/op");
       }
     }
-
   }
 
   private void memory(Renderer renderer) {
@@ -137,7 +136,7 @@ public class RendererBenchmarkTest {
           total += diff;
         }
       }
-      System.out.println("Memory: " + renderer.getClass().getSimpleName() + ": " + total / 1000000);
+      System.out.println("Memory: " + renderer.getClass().getSimpleName() + ": " + total / 1000000 + " bytes/op");
     }
 
   }
