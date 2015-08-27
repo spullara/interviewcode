@@ -34,6 +34,13 @@ public class RendererBenchmarkTest {
   }
 
   @Test
+  public void testOptimizedClassicWithCodePoints() throws Exception {
+    Renderer renderer = new OptimizedClassicWithCodePoints();
+    bench(renderer);
+    memory(renderer);
+  }
+
+  @Test
   public void testBinaryTree() throws Exception {
     Renderer renderer = new BinaryTree();
     bench(renderer);

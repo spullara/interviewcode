@@ -16,6 +16,18 @@ public class RendererTest {
   }
 
   @Test
+  public void testOptimizedClassic() throws Exception {
+    Renderer renderer = new OptimizedClassic();
+    test(renderer);
+  }
+
+  @Test
+  public void testOptimizedClassicWithCodePoints() throws Exception {
+    Renderer renderer = new OptimizedClassicWithCodePoints();
+    testMultibyte(renderer);
+  }
+
+  @Test
   public void testBinaryTree() throws Exception {
     Renderer renderer = new BinaryTree();
     test(renderer);
@@ -61,19 +73,34 @@ public class RendererTest {
   private void test(Renderer renderer) {
     String text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
             "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
-    assertEquals(text, renderer.render(text, new HashSet<Entity>()).toString());
+    assertEquals(text, renderer.render(text, new HashSet<>()).toString());
 
     String result = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  " +
             "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-    Set<Entity> entities = new HashSet<Entity>() {{
-      add(new Entity(25, 32, "<#mobile>"));
-      add(new Entity(33, 42, "<#startups>"));
-      add(new Entity(46, 51, "<#OF12>"));
-      add(new Entity(82, 102, "<http://t.co/HtzEMgAC>"));
-      add(new Entity(103, 110, "<@TiEcon>"));
-      add(new Entity(111, 127, "<@sv_entrepreneur>"));
-      add(new Entity(128, 132, "<@500>"));
-    }};
+    Set<Entity> entities = getEntities();
     assertEquals(result, renderer.render(text, entities).toString());
+  }
+
+  private void testMultibyte(Renderer renderer) {
+    String text = "Attend \uD840\uDC00\uD840\uDC00 hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
+            "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
+    assertEquals(text, renderer.render(text, new HashSet<>()).toString());
+
+    String result = "Attend \uD840\uDC00\uD840\uDC00 hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  " +
+            "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+    Set<Entity> entities = getEntities();
+    assertEquals(result, renderer.render(text, entities).toString());
+  }
+
+  private Set<Entity> getEntities() {
+    return new HashSet<Entity>() {{
+        add(new Entity(25, 32, "<#mobile>"));
+        add(new Entity(33, 42, "<#startups>"));
+        add(new Entity(46, 51, "<#OF12>"));
+        add(new Entity(82, 102, "<http://t.co/HtzEMgAC>"));
+        add(new Entity(103, 110, "<@TiEcon>"));
+        add(new Entity(111, 127, "<@sv_entrepreneur>"));
+        add(new Entity(128, 132, "<@500>"));
+      }};
   }
 }
