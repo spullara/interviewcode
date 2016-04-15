@@ -23,16 +23,13 @@ impl Entity {
     }
 }
 
-
 fn render(text: &str, entities: &mut Vec<Entity>) -> String {
     let mut sb = String::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
     for entity in entities {
-        for c in text.chars().skip(pos).take(entity.start - pos) {
-            sb.push(c);
-        }
+        sb.extend(text.chars().skip(pos).take(entity.start - pos));
         sb.push_str(entity.html.as_str());
         pos = entity.end;
     }
@@ -48,17 +45,11 @@ fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
 
     let mut pos = 0 as usize;
     for entity in entities {
-        for c in text[pos..entity.start].iter() {
-            sb.push(*c);
-        }
-        for c in entity.html.iter() {
-            sb.push(*c);
-        }
+        sb.extend_from_slice(&text[pos..entity.start]);
+        sb.extend_from_slice(&entity.html);
         pos = entity.end;
     }
-    for c in text[pos..text.len()].iter() {
-        sb.push(*c);
-    }
+    sb.extend_from_slice(&text[pos..text.len()]);
     sb.into_iter().collect()
 }
 
