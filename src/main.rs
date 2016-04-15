@@ -1,9 +1,4 @@
-#![feature(convert, core, core_str_ext, vec_push_all)]
 #![cfg_attr(test, feature(test))]
-
-extern crate core;
-
-use core::str::StrExt;
 
 pub static ASCII_TEXT: &'static str = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
 pub static UNICODE_TEXT: &'static str = "Attend \u{20000}\u{20000} hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
@@ -29,31 +24,21 @@ impl Entity {
 }
 
 
-unsafe fn render_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
-    let mut sb = String::with_capacity(text.len()*2);
-    entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
-
-    let mut pos = 0 as usize;
-    for entity in entities {
-        sb.push_str(text.slice_unchecked(pos, entity.start));
-        sb.push_str(entity.html.as_str());
-        pos = entity.end;
-    }
-    sb.push_str(text.slice_unchecked(pos, text.len()));
-    sb
-}
-
 fn render(text: &str, entities: &mut Vec<Entity>) -> String {
     let mut sb = String::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
     for entity in entities {
-        sb.push_str(text.slice_chars(pos, entity.start));
+        for c in text.chars().skip(pos).take(entity.start - pos) {
+            sb.push(c);
+        }
         sb.push_str(entity.html.as_str());
         pos = entity.end;
     }
-    sb.push_str(text.slice_chars(pos, text.chars().count()));
+    for c in text.chars().skip(pos).take(text.chars().count() - pos) {
+        sb.push(c);
+    }
     sb
 }
 
@@ -63,11 +48,17 @@ fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
 
     let mut pos = 0 as usize;
     for entity in entities {
-        sb.push_all(&text[pos..entity.start]);
-        sb.push_all(&*entity.html);
+        for c in text[pos..entity.start].iter() {
+            sb.push(*c);
+        }
+        for c in entity.html.iter() {
+            sb.push(*c);
+        }
         pos = entity.end;
     }
-    sb.push_all(&text[pos..text.len()]);
+    for c in text[pos..text.len()].iter() {
+        sb.push(*c);
+    }
     sb.into_iter().collect()
 }
 
@@ -77,10 +68,6 @@ fn main() {
     println!("Result: {}", result);
 }
 
-
-pub unsafe fn classic_ascii(text: &str, entities: &mut Vec<Entity>) -> String {
-    render_ascii(text, entities)
-}
 
 pub fn classic(text: &str, entities: &mut Vec<Entity>) -> String {
     render(&text, entities)
@@ -121,7 +108,7 @@ mod rendertest {
         let mut rng = rand::thread_rng();
         let mut entities_list: Vec<Vec<Entity>> = Vec::with_capacity(1000);
 
-        for _ in (0..1000) {
+        for _ in 0..1000 {
             let total = rng.gen::<usize>() % 10;
             let mut indices = Vec::with_capacity(total);
             for _ in 0..(total*2) {
@@ -153,12 +140,6 @@ mod rendertest {
     }
 
     #[test]
-    fn correctness_ascii() {
-        let result = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, unsafe { classic_ascii(ASCII_TEXT, &mut entities()) })
-    }
-
-    #[test]
     fn correctness_chars() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
         assert_eq!(result, classic_chars(&UNICODE_TEXT.chars().collect(), &mut decoded_entities()))
@@ -168,17 +149,6 @@ mod rendertest {
     fn correctness() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
         assert_eq!(result, classic(&UNICODE_TEXT, &mut entities()))
-    }
-
-    #[bench]
-    fn bench_replacement_ascii(b: &mut Bencher) {
-        let mut entities_list = generate_entities();
-        let mut index_iter = (0..1000).into_iter().cycle();
-        b.iter(|| {
-            unsafe {
-                classic_ascii(ASCII_TEXT, &mut entities_list[index_iter.next().unwrap()])
-                }
-        });
     }
 
     #[bench]
