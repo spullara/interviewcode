@@ -39,3 +39,9 @@ name = "winapi-build"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
+[metadata]
+"checksum advapi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "307c92332867e586720c0222ee9d890bbe8431711efed8a1b06bc5b40fc66bd7"
+"checksum libc 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "cd70bd1f9f3bfadfdcdf92869faecc795686617d3a9acfe74d0c89a4bb6d142b"
+"checksum rand 0.3.10 (registry+https://github.com/rust-lang/crates.io-index)" = "ea766199c2c97314b1c1aa5c5084d0e85558e4bfadfbe657ee8cd61fecf7cda0"
+"checksum winapi 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "fbd7cedf132c366b81f8d2a2d1ed104885c364183338adc2be8211f99ebd6ff1"
+"checksum winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2d315eee3b34aca4797b2da6b13ed88266e6d612562a0c46390af8299fc699bc"
