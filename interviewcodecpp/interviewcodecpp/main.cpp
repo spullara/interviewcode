@@ -24,8 +24,13 @@ string render(string text, set<Entity> *entitySet) {
     auto entityList = vector<Entity>(entitySet->begin(), entitySet->end());
     sort(entityList.begin(), entityList.end());
     int pos = 0;
+<<<<<<< HEAD
     for (vector<Entity>::const_iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
         result.append(text.substr(pos, entity->start - pos));
+=======
+    for (list<Entity>::const_iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
+        result.append(text, pos, entity->start - pos);
+>>>>>>> switch to using a more efficient append
         result.append(entity->html);
         pos = entity->end;
     }
