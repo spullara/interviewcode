@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <set>
-#include <list>
 #include <random>
 #include <algorithm>
 #include <chrono>
@@ -20,11 +19,12 @@ using namespace std;
 
 
 string render(string text, set<Entity> *entitySet) {
-    string result = "";
-    auto entityList = list<Entity>(entitySet->begin(), entitySet->end());
-    entityList.sort();
+    string result = string();
+    result.reserve(text.length() * 2);
+    auto entityList = vector<Entity>(entitySet->begin(), entitySet->end());
+    sort(entityList.begin(), entityList.end());
     int pos = 0;
-    for (list<Entity>::const_iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
+    for (vector<Entity>::const_iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
         result.append(text.substr(pos, entity->start - pos));
         result.append(entity->html);
         pos = entity->end;
@@ -33,23 +33,23 @@ string render(string text, set<Entity> *entitySet) {
     return result;
 }
 
-list<set<Entity> >* createEntriesList(string text) {
+vector<set<Entity> > createEntriesList(string text) {
     default_random_engine generator;
     uniform_int_distribution<int> distribution(0, 9);
     uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
     auto r = bind(distribution, generator);
     auto r2 = bind(distribution2, generator);
-    auto *entityList = new list<set<Entity> >();
+    auto *entityList = new vector<set<Entity> >();
     for (int i = 0; i < 1000; i++) {
         auto *entitySet = new set<Entity>();
         int total = r();
-        auto indices = list<int>();
+        auto indices = vector<int>();
         for (int j = 0; j < total * 2; j++) {
             int next;
             while(find(indices.begin(), indices.end(), next = r2()) != indices.end());
             indices.push_back(next);
         }
-        indices.sort();
+        sort(indices.begin(), indices.end());
         for (int j = 0; j < total * 2; j += 2) {
             int start = *next(indices.begin(), j);
             int end = *next(indices.begin(), j+1);
@@ -62,7 +62,7 @@ list<set<Entity> >* createEntriesList(string text) {
         }
         entityList->push_back(*entitySet);
     }
-    return entityList;
+    return *entityList;
 }
 
 long currentTimeMillis() {
@@ -75,13 +75,13 @@ long currentTimeMillis() {
 
 void bench() {
     string text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
-    auto entitiesList = createEntriesList(text);
+    auto entityList = createEntriesList(text);
     
     {
         for (int j = 0; j < 5; j++) {
             long start = currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
-                set<Entity> entitySet = *next(entitiesList->begin(), i % 1000);
+                set<Entity> entitySet = entityList[i % 1000];
                 render(text, &entitySet);
             }
             cout << (currentTimeMillis() - start) << " ns/op\n";
