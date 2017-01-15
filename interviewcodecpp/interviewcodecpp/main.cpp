@@ -33,7 +33,7 @@ string render(string text, set<Entity*> *entitySet) {
     return result;
 }
 
-vector<set<Entity*>* > createEntriesList(string text) {
+vector<set<Entity*>*>* createEntriesList(string text) {
     default_random_engine generator;
     uniform_int_distribution<int> distribution(0, 9);
     uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
@@ -62,7 +62,7 @@ vector<set<Entity*>* > createEntriesList(string text) {
         }
         entityList->push_back(entitySet);
     }
-    return *entityList;
+    return entityList;
 }
 
 long currentTimeMillis() {
@@ -79,8 +79,7 @@ void bench() {
         for (int j = 0; j < 5; j++) {
             long start = currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
-                set<Entity*>* entitySet = entityList[i % 1000];
-                render(text, entitySet);
+                render(text, (*entityList)[i % 1000]);
             }
             cout << (currentTimeMillis() - start) << " ns/op\n";
         }
