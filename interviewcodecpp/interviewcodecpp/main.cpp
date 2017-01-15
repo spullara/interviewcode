@@ -33,15 +33,15 @@ string render(string text, set<Entity> *entitySet) {
     return result;
 }
 
-vector<set<Entity> > createEntriesList(string text) {
+vector<set<Entity>* > createEntriesList(string text) {
     default_random_engine generator;
     uniform_int_distribution<int> distribution(0, 9);
     uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
     auto r = bind(distribution, generator);
     auto r2 = bind(distribution2, generator);
-    auto *entityList = new vector<set<Entity> >();
+    auto *entityList = new vector<set<Entity>* >();
     for (int i = 0; i < 1000; i++) {
-        auto *entitySet = new set<Entity>();
+        auto entitySet = new set<Entity>();
         int total = r();
         auto indices = vector<int>();
         for (int j = 0; j < total * 2; j++) {
@@ -60,16 +60,14 @@ vector<set<Entity> > createEntriesList(string text) {
             }
             entitySet->insert(*new Entity(start, end, html));
         }
-        entityList->push_back(*entitySet);
+        entityList->push_back(entitySet);
     }
     return *entityList;
 }
 
 long currentTimeMillis() {
     using namespace std::chrono;
-    milliseconds ms = duration_cast< milliseconds >(
-                                                    system_clock::now().time_since_epoch()
-                                                    );
+    milliseconds ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     return ms.count();
 }
 
@@ -81,8 +79,8 @@ void bench() {
         for (int j = 0; j < 5; j++) {
             long start = currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
-                set<Entity> entitySet = entityList[i % 1000];
-                render(text, &entitySet);
+                set<Entity>* entitySet = entityList[i % 1000];
+                render(text, entitySet);
             }
             cout << (currentTimeMillis() - start) << " ns/op\n";
         }
