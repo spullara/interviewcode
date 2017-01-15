@@ -18,7 +18,7 @@
 using namespace std;
 
 
-string render(string text, set<Entity*> *entitySet) {
+string render(string &text, set<Entity*> *entitySet) {
     string result = string();
     result.reserve(text.length() * 2);
     auto entityList = new vector<Entity*>(entitySet->begin(), entitySet->end());
