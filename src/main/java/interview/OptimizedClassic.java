@@ -8,13 +8,18 @@ import java.util.Set;
  */
 public class OptimizedClassic implements Renderer {
   public CharSequence render(CharSequence text, Set<Entity> entities) {
-    StringBuilder sb = new StringBuilder(256);
-    Entity[] array = entities.toArray(new Entity[entities.size()]);
+    Entity[] array = new Entity[entities.size()];
+    int capacity = text.length();
+    int i = 0;
+    for (Entity entity : entities) {
+      capacity += entity.html.length() - (entity.end - entity.start);
+      array[i++] = entity;
+    }
+    StringBuilder sb = new StringBuilder(capacity);
     Arrays.sort(array);
     int pos = 0;
     for (Entity entity : array) {
-      sb.append(text, pos, entity.start);
-      sb.append(entity.html);
+      sb.append(text, pos, entity.start).append(entity.html);
       pos = entity.end;
     }
     sb.append(text, pos, text.length());

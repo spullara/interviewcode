@@ -11,7 +11,7 @@ import Foundation
 var text: String = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
 "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
 
-struct Entity : Hashable {
+struct Entity : Hashable, Comparable {
     var start: Int
     var end: Int
     var html: String
@@ -23,11 +23,15 @@ struct Entity : Hashable {
     static func == (lhs: Entity, rhs: Entity) -> Bool {
         return lhs.start == rhs.start && lhs.end == rhs.end && lhs.html == rhs.html
     }
+    
+    static func <(lhs: Entity, rhs: Entity) -> Bool {
+        return lhs.start < rhs.start
+    }
 }
 
 
 func createEntityList(text: String) -> Array<Set<Entity>> {
-    let length = text.characters.count
+    let length = text.count
     var entitiesList: Array<Set<Entity>> = Array()
     for _ in 1...1000 {
         var entities: Set<Entity> = Set()
@@ -69,35 +73,19 @@ func testEntities() -> Set<Entity> {
 }
 
 func render(text: String, entities: Set<Entity>) -> String {
-    let entityArray: Array<Entity> = Array(entities).sorted(by: {(e1: Entity, e2: Entity) -> Bool in return e1.start - e2.start < 0})
+    let entityArray = Array(entities).sorted()
     var sb = String()
     var pos = 0
     var posIndex = text.startIndex
     for entity in entityArray {
         let startIndex = text.index(posIndex, offsetBy: entity.start - pos)
-        let endIndex = text.index(startIndex, offsetBy: entity.end - entity.start)
-        sb.append(text.substring(with: posIndex ..< startIndex))
-        sb.append(entity.html)
-        posIndex = endIndex
+        sb.append(contentsOf: text[posIndex ..< startIndex])
+        sb += entity.html
+        posIndex = text.index(startIndex, offsetBy: entity.end - entity.start)
         pos = entity.end
     }
-    sb.append(text.substring(from: posIndex))
+    sb.append(contentsOf: text[posIndex...])
     return sb
-}
-
-func render2(text: String, entities: Set<Entity>) -> String {
-    var sb: Array<Character> = Array()
-    sb.reserveCapacity(256)
-    let chars = ArraySlice(text.characters)
-    let entityArray: Array<Entity> = Array(entities).sorted(by: {(e1: Entity, e2: Entity) -> Bool in return e1.start - e2.start < 0})
-    var pos = 0
-    for entity in entityArray {
-        sb.append(contentsOf: chars[pos..<entity.start])
-        sb.append(contentsOf: entity.html.characters)
-        pos = entity.end
-    }
-    sb.append(contentsOf: chars.suffix(from: pos))
-    return String(sb)
 }
 
 func time() -> UInt64 {
@@ -115,16 +103,6 @@ for _ in 1...2 {
     let start = time()
     for i in 1...1000000 {
         render(text: text, entities: entitiesList[i % 1000])
-    }
-    print(time() - start)
-}
-
-print(render2(text: text, entities: testEntities()))
-
-for _ in 1...2 {
-    let start = time()
-    for i in 1...1000000 {
-        render2(text: text, entities: entitiesList[i % 1000])
     }
     print(time() - start)
 }
