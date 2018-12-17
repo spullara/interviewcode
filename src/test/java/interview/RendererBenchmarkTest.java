@@ -90,6 +90,13 @@ public class RendererBenchmarkTest {
   }
 
   @Test
+  public void testStringBuilderReplaceWithCodePoints() throws Exception {
+    Renderer renderer = new StringBuilderReplaceWithCodePoints();
+    bench(renderer);
+    memory(renderer);
+  }
+
+  @Test
   public void testHashMapScan() throws Exception {
     Renderer renderer = new HashMapScan();
     bench(renderer);
@@ -142,7 +149,7 @@ public class RendererBenchmarkTest {
   }
 
   private static List<Set<Entity>> createEntriesList() {
-    Random r = new Random(938471093847l);
+    Random r = new Random(938471093847L);
     List<Set<Entity>> entitiesList = new ArrayList<Set<Entity>>();
     for (int i = 0; i < 1000; i++) {
       Set<Entity> entities = new HashSet<Entity>();

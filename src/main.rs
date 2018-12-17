@@ -157,7 +157,8 @@ mod rendertest {
         let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
-            classic_chars(&decoded_text, &mut entities_list[index_iter.next().unwrap()])
+            let option = index_iter.next();
+            classic_chars(&decoded_text, &mut entities_list[option.unwrap()])
         });
     }
 }
