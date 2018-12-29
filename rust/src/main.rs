@@ -88,6 +88,47 @@ fn render_chars2(text: &Vec<char>, entities: &Vec<Entity>) -> String {
     sb
 }
 
+#[derive(Debug, Copy, Clone)]
+struct EntityIndex {
+    index: usize,
+    start: usize
+}
+
+fn render_chars_stack(text: &Vec<char>, entities: &Vec<Entity>) -> String {
+    // sort the entities on the stack
+    let mut enitity_indices: [EntityIndex; 280] = [EntityIndex{index: 10000, start:10000}; 280];
+    for (i, entity) in entities.iter().enumerate() {
+        if i == 0 {
+            enitity_indices[0] = EntityIndex{index: 0, start: entity.start};
+        } else {
+            for index in 0..i+1 {
+                if enitity_indices[index].start > entity.start {
+                    for mov in (index + 1 .. i+1).rev() {
+                        enitity_indices[mov] = enitity_indices[mov - 1];
+                    }
+                    enitity_indices[index] = EntityIndex{index: i, start:entity.start};
+                    break;
+                }
+            }
+        }
+    }
+
+    let mut sb = String::with_capacity(text.len()*2);
+    let mut pos = 0 as usize;
+    for i in 0..entities.len() {
+        let entity = &entities[enitity_indices[i].index];
+        for i in pos..entity.start {
+            sb.push(text[i]);
+        }
+        sb.push_str(&entity.html);
+        pos = entity.end;
+    }
+    for i in pos..text.len() {
+        sb.push(text[i]);
+    }
+    sb
+}
+
 fn main() {
     let result = classic(&ASCII_TEXT, &mut entities());
     println!("Result: {}", result);
@@ -104,6 +145,10 @@ pub fn classic_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String 
 
 pub fn classic_chars2(text: &Vec<char>, entities: &Vec<Entity>) -> String {
     render_chars2(&text, entities)
+}
+
+pub fn classic_chars_stack(text: &Vec<char>, entities: &Vec<Entity>) -> String {
+    render_chars_stack(&text, entities)
 }
 
 pub fn entities() -> Vec<Entity> {
@@ -188,6 +233,12 @@ mod rendertest {
         assert_eq!(result, classic_chars2(&UNICODE_TEXT.chars().collect(), &entities()))
     }
 
+    #[test]
+    fn correctness_chars_stack() {
+        let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+        assert_eq!(result, classic_chars_stack(&UNICODE_TEXT.chars().collect(), &entities()))
+    }
+
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
         let entities_list = generate_entities();
@@ -216,6 +267,17 @@ mod rendertest {
         b.iter(|| {
             let option = index_iter.next();
             classic_chars2(&decoded_text, &entities_list[option.unwrap()])
+        });
+    }
+
+    #[bench]
+    fn bench_replacement_chars_stack(b: &mut Bencher) {
+        let entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
+        b.iter(|| {
+            let option = index_iter.next();
+            classic_chars_stack(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 }
