@@ -25,8 +25,6 @@ type Entity struct {
 	html string
 }
 
-func (e Entity) Less()
-
 func testEntities() map[Entity]bool {
 	entities := make(map[Entity]bool)
 	entities[Entity{25, 32, "<#mobile>"}] = true
