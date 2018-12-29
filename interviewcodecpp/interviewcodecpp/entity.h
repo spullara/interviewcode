@@ -20,15 +20,15 @@ public:
     int end;
     u32string html;
     
-    Entity(int, int, u32string);
+    Entity(int, int, u32string&&);
     bool operator<(const Entity &e) const {
         return start < e.start;
     }};
 
-Entity::Entity(int start, int end, u32string html) {
+Entity::Entity(int start, int end, u32string&& html) {
     this->start = start;
     this->end = end;
-    this->html = html;
+    this->html = std::move(html);
 }
 
 

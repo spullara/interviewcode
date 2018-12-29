@@ -18,30 +18,34 @@
 using namespace std;
 
 
-u32string render(const u32string &text, set<Entity*> *entitySet) {
+u32string render(const u32string &text, set<Entity> const& entitySet) {
     u32string result = u32string();
     result.reserve(text.length() * 2);
-    auto entityList = vector<Entity*>(entitySet->begin(), entitySet->end());
-    sort(entityList.begin(), entityList.end());
+
     int pos = 0;
-    for (vector<Entity*>::iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
-        result.append(text, pos, (*entity)->start - pos);
-        result.append((*entity)->html);
-        pos = (*entity)->end;
+    for (auto const& entity: entitySet) {
+        result.append(text, pos, entity.start - pos);
+        result.append(entity.html);
+        pos = entity.end;
     }
+
     result.append(text, pos);
     return result;
 }
 
-vector<set<Entity*>*>* createEntriesList(u32string text) {
+vector<set<Entity>> createEntriesList(u32string text) {
     default_random_engine generator;
+
     uniform_int_distribution<int> distribution(0, 9);
-    uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
     auto r = bind(distribution, generator);
+
+    uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
     auto r2 = bind(distribution2, generator);
-    auto entityList = new vector<set<Entity*>* >();
+
+    vector<set<Entity>> entityList;
+
     for (int i = 0; i < 1000; i++) {
-        auto entitySet = new set<Entity*>();
+        set<Entity> entitySet;
         int total = r();
         auto indices = vector<int>();
         for (int j = 0; j < total * 2; j++) {
@@ -58,10 +62,12 @@ vector<set<Entity*>*>* createEntriesList(u32string text) {
             for (int k = 0; k < length; k++) {
                 html.append(U"XX");
             }
-            entitySet->insert(new Entity(start, end, html));
+            Entity entity(start, end, std::move(html));
+            entitySet.insert(std::move(entity));
         }
-        entityList->push_back(entitySet);
+        entityList.push_back(std::move(entitySet));
     }
+
     return entityList;
 }
 
@@ -79,24 +85,23 @@ void bench() {
         for (int j = 0; j < 5; j++) {
             long start = currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
-                render(text, (*entityList)[i % 1000]);
+                render(text, entityList[i % 1000]);
             }
             cout << (currentTimeMillis() - start) << " ns/op\n";
         }
     }
-
 }
 
 int main(int argc, const char * argv[]) {
     cout << "Starting\n";
-    auto entitySet = new set<Entity*>();
-    entitySet->insert(new Entity(25, 32, U"<#mobile>"));
-    entitySet->insert(new Entity(33, 42, U"<#startups>"));
-    entitySet->insert(new Entity(46, 51, U"<#OF12>"));
-    entitySet->insert(new Entity(82, 102, U"<http://t.co/HtzEMgAC>"));
-    entitySet->insert(new Entity(103, 110, U"<@TiEcon>"));
-    entitySet->insert(new Entity(111, 127, U"<@sv_entrepreneur>"));
-    entitySet->insert(new Entity(128, 132, U"<@500>"));
+    set<Entity> entitySet;
+    entitySet.insert(Entity(25, 32, U"<#mobile>"));
+    entitySet.insert(Entity(33, 42, U"<#startups>"));
+    entitySet.insert(Entity(46, 51, U"<#OF12>"));
+    entitySet.insert(Entity(82, 102, U"<http://t.co/HtzEMgAC>"));
+    entitySet.insert(Entity(103, 110, U"<@TiEcon>"));
+    entitySet.insert(Entity(111, 127, U"<@sv_entrepreneur>"));
+    entitySet.insert(Entity(128, 132, U"<@500>"));
     
     u32string text = U"Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     u32string test = U"Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
