@@ -18,8 +18,8 @@
 using namespace std;
 
 
-string render(const string &text, set<Entity*> *entitySet) {
-    string result = string();
+u32string render(const u32string &text, set<Entity*> *entitySet) {
+    u32string result = u32string();
     result.reserve(text.length() * 2);
     auto entityList = new vector<Entity*>(entitySet->begin(), entitySet->end());
     sort(entityList->begin(), entityList->end());
@@ -33,7 +33,7 @@ string render(const string &text, set<Entity*> *entitySet) {
     return result;
 }
 
-vector<set<Entity*>*>* createEntriesList(string text) {
+vector<set<Entity*>*>* createEntriesList(u32string text) {
     default_random_engine generator;
     uniform_int_distribution<int> distribution(0, 9);
     uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
@@ -54,9 +54,9 @@ vector<set<Entity*>*>* createEntriesList(string text) {
             int start = *next(indices.begin(), j);
             int end = *next(indices.begin(), j+1);
             int length = end - start;
-            string html = "";
+            u32string html = U"";
             for (int k = 0; k < length; k++) {
-                html.append("XX");
+                html.append(U"XX");
             }
             entitySet->insert(new Entity(start, end, html));
         }
@@ -72,7 +72,7 @@ long currentTimeMillis() {
 }
 
 void bench() {
-    string text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
+    u32string text = U"Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     auto entityList = createEntriesList(text);
     
     {
@@ -88,21 +88,22 @@ void bench() {
 }
 
 int main(int argc, const char * argv[]) {
-    
+    cout << "Starting\n";
     auto entitySet = new set<Entity*>();
-    entitySet->insert(new Entity(25, 32, "<#mobile>"));
-    entitySet->insert(new Entity(33, 42, "<#startups>"));
-    entitySet->insert(new Entity(46, 51, "<#OF12>"));
-    entitySet->insert(new Entity(82, 102, "<http://t.co/HtzEMgAC>"));
-    entitySet->insert(new Entity(103, 110, "<@TiEcon>"));
-    entitySet->insert(new Entity(111, 127, "<@sv_entrepreneur>"));
-    entitySet->insert(new Entity(128, 132, "<@500>"));
+    entitySet->insert(new Entity(25, 32, U"<#mobile>"));
+    entitySet->insert(new Entity(33, 42, U"<#startups>"));
+    entitySet->insert(new Entity(46, 51, U"<#OF12>"));
+    entitySet->insert(new Entity(82, 102, U"<http://t.co/HtzEMgAC>"));
+    entitySet->insert(new Entity(103, 110, U"<@TiEcon>"));
+    entitySet->insert(new Entity(111, 127, U"<@sv_entrepreneur>"));
+    entitySet->insert(new Entity(128, 132, U"<@500>"));
     
-    string text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
-    string test = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+    u32string text = U"Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
+    u32string test = U"Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 
-    string result = render(text, entitySet);
-    cout << result << ": " << (test == result) << "\n";
+    u32string result = render(text, entitySet);
+    // cout << result << ": " << (test == result) << "\n";
+    cout << "Running benchmark\n";
     
     bench();
     

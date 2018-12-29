@@ -18,14 +18,14 @@ class Entity : less<Entity> {
 public:
     int start;
     int end;
-    string html;
+    u32string html;
     
-    Entity(int, int, string);
+    Entity(int, int, u32string);
     bool operator<(const Entity &e) const {
         return start < e.start;
     }};
 
-Entity::Entity(int start, int end, string html) {
+Entity::Entity(int start, int end, u32string html) {
     this->start = start;
     this->end = end;
     this->html = html;
