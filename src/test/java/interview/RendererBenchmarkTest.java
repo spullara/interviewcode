@@ -97,6 +97,13 @@ public class RendererBenchmarkTest {
   }
 
   @Test
+  public void testStringBuilderReplaceWithCodePointsSorted() throws Exception {
+    Renderer renderer = new StringBuilderReplaceWithCodePointsAlreadySorted();
+    benchSorted(renderer);
+    memory(renderer);
+  }
+
+  @Test
   public void testHashMapScan() throws Exception {
     Renderer renderer = new HashMapScan();
     bench(renderer);
@@ -114,6 +121,25 @@ public class RendererBenchmarkTest {
     String text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
             "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     List<Set<Entity>> entitiesList = createEntriesList();
+
+    {
+      for (int j = 0; j < 5; j++) {
+        for (int i = 0; i < 10000; i++) {
+          renderer.render(text, entitiesList.get(i % 1000));
+        }
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000000; i++) {
+          renderer.render(text, entitiesList.get(i % 1000));
+        }
+        System.out.println(renderer.getClass().getSimpleName() + ": " + (System.currentTimeMillis() - start) + " ns/op");
+      }
+    }
+  }
+
+  private void benchSorted(Renderer renderer) {
+    String text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
+            "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
+    List<Set<Entity>> entitiesList = createEntriesListSorted();
 
     {
       for (int j = 0; j < 5; j++) {
@@ -153,6 +179,34 @@ public class RendererBenchmarkTest {
     List<Set<Entity>> entitiesList = new ArrayList<Set<Entity>>();
     for (int i = 0; i < 1000; i++) {
       Set<Entity> entities = new HashSet<Entity>();
+      int total = r.nextInt(10);
+      List<Integer> indices = new ArrayList<Integer>();
+      for (int j = 0; j < total * 2; j++) {
+        int next;
+        while (indices.contains(next = r.nextInt(text.length()))) ;
+        indices.add(next);
+      }
+      Collections.sort(indices);
+      for (int j = 0; j < total * 2; j += 2) {
+        int start = indices.get(j);
+        int end = indices.get(j + 1);
+        int length = end - start;
+        StringBuilder sb = new StringBuilder(length * 2);
+        for (int k = 0; k < length; k++) {
+          sb.append("XX");
+        }
+        entities.add(new Entity(start, end, sb.toString()));
+      }
+      entitiesList.add(entities);
+    }
+    return entitiesList;
+  }
+
+  private static List<Set<Entity>> createEntriesListSorted() {
+    Random r = new Random(938471093847L);
+    List<Set<Entity>> entitiesList = new ArrayList<Set<Entity>>();
+    for (int i = 0; i < 1000; i++) {
+      Set<Entity> entities = new TreeSet<Entity>();
       int total = r.nextInt(10);
       List<Integer> indices = new ArrayList<Integer>();
       for (int j = 0; j < total * 2; j++) {
