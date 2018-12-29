@@ -6,3 +6,6 @@ authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
 [dev-dependencies]
 rand = "*"
+
+[dependencies]
+jemallocator = "0.1.8"
