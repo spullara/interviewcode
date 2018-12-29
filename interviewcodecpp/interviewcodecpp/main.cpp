@@ -21,10 +21,10 @@ using namespace std;
 u32string render(const u32string &text, set<Entity*> *entitySet) {
     u32string result = u32string();
     result.reserve(text.length() * 2);
-    auto entityList = new vector<Entity*>(entitySet->begin(), entitySet->end());
-    sort(entityList->begin(), entityList->end());
+    auto entityList = vector<Entity*>(entitySet->begin(), entitySet->end());
+    sort(entityList.begin(), entityList.end());
     int pos = 0;
-    for (vector<Entity*>::iterator entity = entityList->begin(), end = entityList->end(); entity != end; ++entity) {
+    for (vector<Entity*>::iterator entity = entityList.begin(), end = entityList.end(); entity != end; ++entity) {
         result.append(text, pos, (*entity)->start - pos);
         result.append((*entity)->html);
         pos = (*entity)->end;
