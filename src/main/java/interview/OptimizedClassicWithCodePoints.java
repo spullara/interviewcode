@@ -7,7 +7,7 @@ import java.util.*;
  */
 public class OptimizedClassicWithCodePoints implements Renderer {
   public CharSequence render(CharSequence text, Set<Entity> entities) {
-    StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder(text.length() * 2);
     List<Entity> list = new ArrayList<>(entities);
     Collections.sort(list);
     String s = text.toString();
