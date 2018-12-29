@@ -99,10 +99,11 @@ print(render(text: text, entities: testEntities()))
 
 var entitiesList = createEntityList(text: text)
 
-for _ in 1...2 {
+for _ in 1...5 {
     let start = time()
     for i in 1...1000000 {
         render(text: text, entities: entitiesList[i % 1000])
     }
-    print(time() - start)
+    let diff = time() - start
+    print(String(diff) + " ns/render")
 }
