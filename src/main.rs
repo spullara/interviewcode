@@ -41,7 +41,8 @@ impl Entity {
     }
 }
 
-fn render(text: &str, entities: &mut Vec<Entity>) -> String {
+fn render(text: &str, im_entities: &Vec<Entity>) -> String {
+    let mut entities = im_entities.to_vec();
     let mut sb = String::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
@@ -57,7 +58,8 @@ fn render(text: &str, entities: &mut Vec<Entity>) -> String {
     sb
 }
 
-fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
+fn render_chars(text: &Vec<char>, im_entities: &Vec<DecodedEntity>) -> String {
+    let mut entities = im_entities.to_vec();
     let mut sb: Vec<char> = Vec::with_capacity(text.len()*2);
     entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
@@ -71,7 +73,8 @@ fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
     sb.into_iter().collect()
 }
 
-fn render_chars_2(text: &Vec<char>, entities: &mut Vec<Entity>) -> String {
+fn render_chars_2(text: &Vec<char>, im_entities: &Vec<Entity>) -> String {
+    let mut entities = im_entities.to_vec();
     let mut sb = String::with_capacity(text.len()*2);
     entities.sort();
 
@@ -97,15 +100,15 @@ fn main() {
 }
 
 
-pub fn classic(text: &str, entities: &mut Vec<Entity>) -> String {
+pub fn classic(text: &str, entities: &Vec<Entity>) -> String {
     render(&text, entities)
 }
 
-pub fn classic_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
+pub fn classic_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
     render_chars(&text, entities)
 }
 
-pub fn classic_chars_2(text: &Vec<char>, entities: &mut Vec<Entity>) -> String {
+pub fn classic_chars_2(text: &Vec<char>, entities: &Vec<Entity>) -> String {
     render_chars_2(&text, entities)
 }
 
@@ -191,32 +194,32 @@ mod rendertest {
 
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
-        let mut entities_list = generate_entities();
+        let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| {
-            classic(UNICODE_TEXT, &mut entities_list[index_iter.next().unwrap()])
+            classic(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()])
         });
     }
 
     #[bench]
     fn bench_replacement_chars(b: &mut Bencher) {
-        let mut entities_list = generate_decoded_entities();
+        let entities_list = generate_decoded_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            classic_chars(&decoded_text, &mut entities_list[option.unwrap()])
+            classic_chars(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 
     #[bench]
     fn bench_replacement_chars_2(b: &mut Bencher) {
-        let mut entities_list = generate_entities();
+        let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            classic_chars_2(&decoded_text, &mut entities_list[option.unwrap()])
+            classic_chars_2(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 }
