@@ -1,12 +1,12 @@
 package interview;
 
+import interviewkotlin.KotlinStringBuilderReplaceWithCodePoints;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.*;
-
 
 public class RendererBenchmarkTest {
   private static List<Set<Entity>> entitiesList;
@@ -92,6 +92,13 @@ public class RendererBenchmarkTest {
   @Test
   public void testStringBuilderReplaceWithCodePoints() throws Exception {
     Renderer renderer = new StringBuilderReplaceWithCodePoints();
+    bench(renderer);
+    memory(renderer);
+  }
+
+  @Test
+  public void testKotlinStringBuilderReplaceWithCodePoints() throws Exception {
+    Renderer renderer = new KotlinStringBuilderReplaceWithCodePoints();
     bench(renderer);
     memory(renderer);
   }

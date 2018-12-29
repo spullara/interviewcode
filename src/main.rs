@@ -190,7 +190,7 @@ mod rendertest {
 
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
-        let mut entities_list = generate_entities();
+        let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| {
             classic(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()])
@@ -199,7 +199,7 @@ mod rendertest {
 
     #[bench]
     fn bench_replacement_chars(b: &mut Bencher) {
-        let mut entities_list = generate_decoded_entities();
+        let entities_list = generate_decoded_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
@@ -210,7 +210,7 @@ mod rendertest {
 
     #[bench]
     fn bench_replacement_chars2(b: &mut Bencher) {
-        let mut entities_list = generate_entities();
+        let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
