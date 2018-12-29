@@ -130,25 +130,8 @@ fn render_chars_stack(text: &Vec<char>, entities: &Vec<Entity>) -> String {
 }
 
 fn main() {
-    let result = classic(&ASCII_TEXT, &mut entities());
+    let result = render(&ASCII_TEXT, &mut entities());
     println!("Result: {}", result);
-}
-
-
-pub fn classic(text: &str, entities: &Vec<Entity>) -> String {
-    render(&text, entities)
-}
-
-pub fn classic_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
-    render_chars(&text, entities)
-}
-
-pub fn classic_chars2(text: &Vec<char>, entities: &Vec<Entity>) -> String {
-    render_chars2(&text, entities)
-}
-
-pub fn classic_chars_stack(text: &Vec<char>, entities: &Vec<Entity>) -> String {
-    render_chars_stack(&text, entities)
 }
 
 pub fn entities() -> Vec<Entity> {
@@ -218,25 +201,25 @@ mod rendertest {
     #[test]
     fn correctness_chars() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic_chars(&UNICODE_TEXT.chars().collect(), &decoded_entities()))
+        assert_eq!(result, render_chars(&UNICODE_TEXT.chars().collect(), &decoded_entities()))
     }
 
     #[test]
     fn correctness() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic(&UNICODE_TEXT, &entities()))
+        assert_eq!(result, render(&UNICODE_TEXT, &entities()))
     }
 
     #[test]
     fn correctness_chars2() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic_chars2(&UNICODE_TEXT.chars().collect(), &entities()))
+        assert_eq!(result, render_chars2(&UNICODE_TEXT.chars().collect(), &entities()))
     }
 
     #[test]
     fn correctness_chars_stack() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, classic_chars_stack(&UNICODE_TEXT.chars().collect(), &entities()))
+        assert_eq!(result, render_chars_stack(&UNICODE_TEXT.chars().collect(), &entities()))
     }
 
     #[bench]
@@ -244,7 +227,7 @@ mod rendertest {
         let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| {
-            classic(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()])
+            render(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()])
         });
     }
 
@@ -255,7 +238,7 @@ mod rendertest {
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            classic_chars(&decoded_text, &entities_list[option.unwrap()].clone())
+            render_chars(&decoded_text, &entities_list[option.unwrap()].clone())
         });
     }
 
@@ -266,7 +249,7 @@ mod rendertest {
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            classic_chars2(&decoded_text, &entities_list[option.unwrap()])
+            render_chars2(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 
@@ -277,7 +260,7 @@ mod rendertest {
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            classic_chars_stack(&decoded_text, &entities_list[option.unwrap()])
+            render_chars_stack(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 }
