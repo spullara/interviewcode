@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <set>
+#include <unordered_set>
 #include <random>
 #include <algorithm>
 #include <chrono>
@@ -17,13 +18,12 @@
 
 using namespace std;
 
-
-u32string render(const u32string &text, set<Entity> const& entitySet) {
+u32string render(const u32string &text, unordered_set<Entity> const& entitySet) {
     u32string result = u32string();
     result.reserve(text.length() * 2);
-
+    auto entities = set<Entity>(entitySet.begin(), entitySet.end());
     int pos = 0;
-    for (auto const& entity: entitySet) {
+    for (auto const& entity: entities) {
         result.append(text, pos, entity.start - pos);
         result.append(entity.html);
         pos = entity.end;
@@ -33,7 +33,7 @@ u32string render(const u32string &text, set<Entity> const& entitySet) {
     return result;
 }
 
-vector<set<Entity>> createEntriesList(u32string text) {
+vector<unordered_set<Entity>> createEntriesList(u32string text) {
     default_random_engine generator;
 
     uniform_int_distribution<int> distribution(0, 9);
@@ -42,10 +42,10 @@ vector<set<Entity>> createEntriesList(u32string text) {
     uniform_int_distribution<int> distribution2 = uniform_int_distribution<int>(0, (int) (text.length() - 1));
     auto r2 = bind(distribution2, generator);
 
-    vector<set<Entity>> entityList;
+    vector<unordered_set<Entity>> entityList;
 
     for (int i = 0; i < 1000; i++) {
-        set<Entity> entitySet;
+        unordered_set<Entity> entitySet;
         int total = r();
         auto indices = vector<int>();
         for (int j = 0; j < total * 2; j++) {
@@ -94,7 +94,7 @@ void bench() {
 
 int main(int argc, const char * argv[]) {
     cout << "Starting\n";
-    set<Entity> entitySet;
+    unordered_set<Entity> entitySet;
     entitySet.insert(Entity(25, 32, U"<#mobile>"));
     entitySet.insert(Entity(33, 42, U"<#startups>"));
     entitySet.insert(Entity(46, 51, U"<#OF12>"));
