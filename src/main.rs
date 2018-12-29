@@ -1,13 +1,31 @@
 #![cfg_attr(test, feature(test))]
 
+extern crate jemallocator;
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+use std::cmp::Ordering;
+
 pub static ASCII_TEXT: &'static str = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
 pub static UNICODE_TEXT: &'static str = "Attend \u{20000}\u{20000} hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Entity {
     start: usize,
     end: usize,
     html: String
+}
+
+impl Ord for Entity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.cmp(&other.start)
+    }
+}
+
+impl PartialOrd for Entity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[derive(Clone)]
@@ -53,6 +71,25 @@ fn render_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
     sb.into_iter().collect()
 }
 
+fn render_chars_2(text: &Vec<char>, entities: &mut Vec<Entity>) -> String {
+    let mut sb = String::with_capacity(text.len()*2);
+    entities.sort();
+
+    let mut pos = 0 as usize;
+    for entity in entities {
+        for i in pos..entity.start {
+            sb.push(text[i]);
+        }
+        sb.push_str(&entity.html);
+        pos = entity.end;
+    }
+
+    for i in pos..text.len() {
+        sb.push(text[i]);
+    }
+
+    sb
+}
 
 fn main() {
     let result = classic(&ASCII_TEXT, &mut entities());
@@ -66,6 +103,10 @@ pub fn classic(text: &str, entities: &mut Vec<Entity>) -> String {
 
 pub fn classic_chars(text: &Vec<char>, entities: &mut Vec<DecodedEntity>) -> String {
     render_chars(&text, entities)
+}
+
+pub fn classic_chars_2(text: &Vec<char>, entities: &mut Vec<Entity>) -> String {
+    render_chars_2(&text, entities)
 }
 
 pub fn entities() -> Vec<Entity> {
@@ -131,6 +172,12 @@ mod rendertest {
     }
 
     #[test]
+    fn correctness_chars_2() {
+        let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+        assert_eq!(result, classic_chars_2(&UNICODE_TEXT.chars().collect(), &mut entities()))
+    }
+
+    #[test]
     fn correctness_chars() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
         assert_eq!(result, classic_chars(&UNICODE_TEXT.chars().collect(), &mut decoded_entities()))
@@ -159,6 +206,17 @@ mod rendertest {
         b.iter(|| {
             let option = index_iter.next();
             classic_chars(&decoded_text, &mut entities_list[option.unwrap()])
+        });
+    }
+
+    #[bench]
+    fn bench_replacement_chars_2(b: &mut Bencher) {
+        let mut entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
+        b.iter(|| {
+            let option = index_iter.next();
+            classic_chars_2(&decoded_text, &mut entities_list[option.unwrap()])
         });
     }
 }

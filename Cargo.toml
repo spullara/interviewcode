@@ -4,5 +4,8 @@ name = "interviewcode"
 version = "0.0.1"
 authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
+[dependencies]
+jemallocator = "0.1.8"
+
 [dev-dependencies]
 rand = "*"
