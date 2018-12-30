@@ -14,6 +14,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <codecvt>
 
 #include "entity.h"
 
@@ -116,12 +117,15 @@ int main(int argc, const char * argv[]) {
     entitySet.insert(std::unique_ptr<Entity>(new Entity(111, 127, U"<@sv_entrepreneur>")));
     entitySet.insert(std::unique_ptr<Entity>(new Entity(128, 132, U"<@500>")));
 
-    u32string text = U"Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
-    u32string test = U"Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+    u32string text = U"Attend \u4e20\u4e20 hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
+    u32string test = U"Attend \u4e20\u4e20 hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 
     u32string result;
     render(text, entitySet, result);
-    // cout << result << ": " << (test == result) << "\n";
+
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+    cout << convert.to_bytes(result) << ": " << (result == test) << "\n";
+
     cout << "Running benchmark\n";
 
     bench();
