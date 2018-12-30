@@ -21,27 +21,27 @@ using namespace std;
 
 using EntitySet = unordered_set<unique_ptr<Entity>, std::hash<unique_ptr<Entity>>, Entity::UniquePtrComparator>;
 
-u32string render(const u32string &text, EntitySet const& entitySet) {
-    u32string result = u32string();
+thread_local vector<Entity*> _render_entities_buffer;
+void render(const u32string &text, EntitySet const& entitySet, /* out */ u32string& result) {
+    result.clear();
     result.reserve(text.length() * 2);
 
-    // Sort entitySet by copying Entity * into a set.
-    auto entities = vector<Entity*>();
-    entities.reserve(entitySet.size());
+    auto entities = &_render_entities_buffer;
+    entities->clear();
+    entities->reserve(entitySet.size());
     for (auto const& entity: entitySet) {
-        entities.push_back(entity.get());
+        entities->push_back(entity.get());
     }
-    std::sort(entities.begin(), entities.end(), Entity::PtrComparator());
+    std::sort(entities->begin(), entities->end(), Entity::PtrComparator());
 
     int pos = 0;
-    for (auto const& entity: entities) {
+    for (auto const& entity: *entities) {
         result.append(text, pos, entity->start - pos);
         result.append(entity->html);
         pos = entity->end;
     }
 
     result.append(text, pos);
-    return result;
 }
 
 vector<EntitySet> createEntriesList(u32string text) {
@@ -94,10 +94,11 @@ void bench() {
     auto entityList = createEntriesList(text);
 
     {
+        u32string result;
         for (int j = 0; j < 5; j++) {
             long start = currentTimeMillis();
             for (int i = 0; i < 1000000; i++) {
-                render(text, entityList[i % 1000]);
+                render(text, entityList[i % 1000], result);
             }
             cout << (currentTimeMillis() - start) << " ns/op\n";
         }
@@ -118,7 +119,8 @@ int main(int argc, const char * argv[]) {
     u32string text = U"Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     u32string test = U"Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 
-    u32string result = render(text, entitySet);
+    u32string result;
+    render(text, entitySet, result);
     // cout << result << ": " << (test == result) << "\n";
     cout << "Running benchmark\n";
 
