@@ -25,12 +25,13 @@ u32string render(const u32string &text, EntitySet const& entitySet) {
     u32string result = u32string();
     result.reserve(text.length() * 2);
 
-
     // Sort entitySet by copying Entity * into a set.
-    auto entities = set<Entity*, Entity::PtrComparator>();
+    auto entities = vector<Entity*>();
+    entities.reserve(entitySet.size());
     for (auto const& entity: entitySet) {
-        entities.insert(entity.get());
+        entities.push_back(entity.get());
     }
+    std::sort(entities.begin(), entities.end(), Entity::PtrComparator());
 
     int pos = 0;
     for (auto const& entity: entities) {

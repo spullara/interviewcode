@@ -55,7 +55,7 @@ struct std::hash<unique_ptr<Entity>>
         // Compute individual hash values for first,
         // second and third and combine them using XOR
         // and bit shifting:
-		return ((_int_hash(k->start) ^ (_int_hash(k->end) << 1)) >> 1) ^ (_u32string_hash(k->html) << 1);
+        return ((_int_hash(k->start) ^ (_int_hash(k->end) << 1)) >> 1) ^ (_u32string_hash(k->html) << 1);
     }
 
 private:
