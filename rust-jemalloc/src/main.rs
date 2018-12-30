@@ -19,6 +19,7 @@ impl Ord for Entity<String> {
         self.start.cmp(&other.start)
     }
 }
+
 impl PartialOrd for Entity<String> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -68,7 +69,7 @@ fn render_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
         pos = entity.end;
     }
     sb.extend_from_slice(&text[pos..text.len()]);
-    sb.into_iter().collect()
+    sb.into_iter().collect() // <-- UTF-8 encoding
 }
 
 fn render_chars2(text: &Vec<char>, entities: &Vec<Entity<String>>) -> String {
@@ -116,7 +117,7 @@ fn render_chars_entity_references_to_chars(text: &Vec<char>, entities: &Vec<&Dec
     for e in entities {
         my_entities.push(e);
     }
-    my_entities.sort();
+    my_entities.sort_unstable();
 
     let mut sb: Vec<char> = Vec::with_capacity(text.len()*2);
     let mut pos = 0 as usize;
@@ -129,9 +130,59 @@ fn render_chars_entity_references_to_chars(text: &Vec<char>, entities: &Vec<&Dec
     sb
 }
 
+#[derive(Copy, Clone, Debug)]
+struct Coord {
+    start: usize,
+    end: usize,
+}
+
+fn render_coords(coordinates: &mut Vec<Coord>, text: &Vec<char>, entities: &Vec<&DecodedEntity>)  {
+    let mut pos = 0 as usize;
+    for entity in entities {
+        coordinates.push(Coord{start: pos, end: entity.start});
+        coordinates.push(Coord{start: 0, end: entity.html.len()});
+        pos = entity.end;
+    }
+    coordinates.push(Coord{start: pos, end: text.len()});
+}
+
+fn coordinates_to_utf8(coordinates: &Vec<Coord>, text: &Vec<char>, entities: &Vec<&DecodedEntity>) -> String {
+    let mut sb = String::with_capacity(text.len()*2);
+    let mut in_entity = false;
+    let mut entity_index = 0;
+
+    let mut source: &Vec<char> = text;
+
+    for coord in coordinates {
+        if in_entity {
+            source = &entities[entity_index].html;
+            entity_index += 1;
+        } else {
+            source = text;
+        }
+
+        for i in coord.start..coord.end {
+            sb.push(source[i]);
+        }
+        in_entity = !in_entity;
+    }
+
+    sb
+}
+
 fn main() {
-    let result = render(&ASCII_TEXT, &mut entities());
-    println!("Result: {}", result);
+    let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+    let mut chars: Vec<char> = Vec::new();
+
+    let text = &UNICODE_TEXT.chars().collect();
+    let decoded = &decoded_entities(entities());
+    let refs = &entity_refs(decoded);
+    for i in 0..10000000 {
+        chars = render_chars_entity_references_to_chars(text, refs);
+    }
+    
+    let s: String = chars.iter().collect();
+    println!("Result: {}", s);
 }
 
 pub fn entities() -> Vec<Entity<String>> {
@@ -239,6 +290,32 @@ mod rendertest {
         assert_eq!(result, s);
     }
 
+    #[test]
+    fn correctness_render_steps() {
+        let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+
+        // Decode from UTF-8
+        let decoded = &decoded_entities(entities());
+        let refs = &entity_refs(decoded);
+        let text = &UNICODE_TEXT.chars().collect();
+
+        // Sort entities
+        let mut sorted: Vec<&DecodedEntity> = Vec::with_capacity(refs.len());
+        for e in refs {
+            sorted.push(e);
+        }
+        sorted.sort_unstable();
+
+        // Render coordinates
+        let mut ht = Vec::with_capacity(64);
+        render_coords(&mut ht, text, &sorted);
+
+        // Encode to UTF-8
+        let s = coordinates_to_utf8(&ht, text, &sorted);
+
+        assert_eq!(result, s);
+    }
+
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
         let entities_list = generate_entities();
@@ -297,6 +374,32 @@ mod rendertest {
         b.iter(|| {
             let option = index_iter.next();
             render_chars_entity_references_to_chars(&decoded_text, &refs[option.unwrap()])
+        });
+    }
+
+    // Benchmark only sorting entities and determining substitutions.
+    #[bench]
+    fn bench_render_coords(b: &mut Bencher) {
+        let entities_list = generate_decoded_entities();
+        let mut refs = Vec::with_capacity(1000);
+        for (i, _) in entities_list.iter().enumerate() {
+            refs.push(entity_refs(&entities_list[i]));
+        }
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
+        let mut ht = Vec::with_capacity(64);
+
+        b.iter(|| {
+            let option = index_iter.next();
+            ht.clear();
+            // Sort entities
+            let refs = &refs[option.unwrap()];
+            let mut sorted: Vec<&DecodedEntity> = Vec::with_capacity(refs.len());
+            for e in refs {
+                sorted.push(e);
+            }
+            sorted.sort_unstable();
+            render_coords(&mut ht, &decoded_text, &sorted);
         });
     }
 }
