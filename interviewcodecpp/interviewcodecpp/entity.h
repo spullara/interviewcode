@@ -19,14 +19,22 @@ public:
     int start;
     int end;
     u32string html;
-    
+
+    struct PtrComparator {
+        bool operator()(Entity const* left, Entity const* right) const {
+            return left->start < right->start;
+        }
+    };
+
+    struct UniquePtrComparator {
+        bool operator()(std::unique_ptr<Entity> const& left, std::unique_ptr<Entity> const& right) const {
+            return left->start == right->start &&
+                left->end == right->end &&
+                left->html == right->html;
+        }
+    };
+
     Entity(int, int, u32string&&);
-    bool operator<(const Entity &e) const {
-        return start < e.start;
-    }
-    bool operator==(const Entity &e) const {
-        return start == e.start && end == e.end && html == e.html;
-    }
 };
 
 Entity::Entity(int start, int end, u32string&& html) {
@@ -36,22 +44,23 @@ Entity::Entity(int start, int end, u32string&& html) {
 }
 
 template <>
-struct std::hash<Entity>
+struct std::hash<unique_ptr<Entity>>
 {
-    std::size_t operator()(const Entity& k) const
+    std::size_t operator()(unique_ptr<Entity> const& k) const
     {
         using std::size_t;
         using std::hash;
         using std::string;
-        
+
         // Compute individual hash values for first,
         // second and third and combine them using XOR
         // and bit shifting:
-        
-        return ((hash<int>()(k.start)
-                 ^ (hash<int>()(k.end) << 1)) >> 1)
-        ^ (hash<u32string>()(k.html) << 1);
+		return ((_int_hash(k->start) ^ (_int_hash(k->end) << 1)) >> 1) ^ (_u32string_hash(k->html) << 1);
     }
+
+private:
+    std::hash<int> _int_hash;
+    std::hash<u32string> _u32string_hash;
 };
 
 #endif /* entity_h */
