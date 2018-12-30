@@ -106,17 +106,6 @@ fn render_chars_entity_references(text: &Vec<char>, entities: &Vec<&Entity<Strin
     sb
 }
 
-// The best that can currently be done per <https://goo.gl/CBHdE9>
-pub fn as_u32(us: usize) -> u32 {
-    let u = if us > std::u32::MAX as usize {
-        None
-    } else {
-        Some(us as u32)
-    };
-    u.unwrap()
-}
-
-
 fn main() {
     let result = render(&ASCII_TEXT, &mut entities());
     println!("Result: {}", result);
