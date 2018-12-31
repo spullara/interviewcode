@@ -171,18 +171,8 @@ fn coordinates_to_utf8(coordinates: &Vec<Coord>, text: &Vec<char>, entities: &Ve
 }
 
 fn main() {
-    let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-    let mut chars: Vec<char> = Vec::new();
-
-    let text = &UNICODE_TEXT.chars().collect();
-    let decoded = &decoded_entities(entities());
-    let refs = &entity_refs(decoded);
-    for i in 0..10000000 {
-        chars = render_chars_entity_references_to_chars(text, refs);
-    }
-    
-    let s: String = chars.iter().collect();
-    println!("Result: {}", s);
+    let result = render(&ASCII_TEXT, &mut entities());
+    println!("Result: {}", result);
 }
 
 pub fn entities() -> Vec<Entity<String>> {
