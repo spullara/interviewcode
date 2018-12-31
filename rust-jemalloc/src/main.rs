@@ -19,22 +19,24 @@ impl Ord for Entity<String> {
         self.start.cmp(&other.start)
     }
 }
+
 impl PartialOrd for Entity<String> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-#[derive(Clone)]
-pub struct DecodedEntity {
-    start: usize,
-    end: usize,
-    html: Vec<char>,
+type DecodedEntity = Entity<Vec<char>>;
+
+impl Ord for DecodedEntity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.cmp(&other.start)
+    }
 }
 
-impl Entity<String> {
-    fn decode(&self) -> DecodedEntity {
-        DecodedEntity {start: self.start, end: self.end, html: self.html.chars().collect()}
+impl PartialOrd for DecodedEntity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -67,7 +69,7 @@ fn render_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
         pos = entity.end;
     }
     sb.extend_from_slice(&text[pos..text.len()]);
-    sb.into_iter().collect()
+    sb.into_iter().collect() // <-- UTF-8 encoding
 }
 
 fn render_chars2(text: &Vec<char>, entities: &Vec<Entity<String>>) -> String {
@@ -110,6 +112,64 @@ fn render_chars_entity_references(text: &Vec<char>, entities: &Vec<&Entity<Strin
     sb
 }
 
+fn render_chars_entity_references_to_chars(text: &Vec<char>, entities: &Vec<&DecodedEntity>) -> Vec<char> {
+    let mut my_entities: Vec<&DecodedEntity> = Vec::with_capacity(entities.len());
+    for e in entities {
+        my_entities.push(e);
+    }
+    my_entities.sort_unstable();
+
+    let mut sb: Vec<char> = Vec::with_capacity(text.len()*2);
+    let mut pos = 0 as usize;
+    for entity in my_entities {
+        sb.extend_from_slice(&text[pos..entity.start]);
+        sb.extend_from_slice(&entity.html);
+        pos = entity.end;
+    }
+    sb.extend_from_slice(&text[pos..text.len()]);
+    sb
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Coord {
+    start: usize,
+    end: usize,
+}
+
+fn render_coords(coordinates: &mut Vec<Coord>, text: &Vec<char>, entities: &Vec<&DecodedEntity>)  {
+    let mut pos = 0 as usize;
+    for entity in entities {
+        coordinates.push(Coord{start: pos, end: entity.start});
+        coordinates.push(Coord{start: 0, end: entity.html.len()});
+        pos = entity.end;
+    }
+    coordinates.push(Coord{start: pos, end: text.len()});
+}
+
+fn coordinates_to_utf8(coordinates: &Vec<Coord>, text: &Vec<char>, entities: &Vec<&DecodedEntity>) -> String {
+    let mut sb = String::with_capacity(text.len()*2);
+    let mut in_entity = false;
+    let mut entity_index = 0;
+
+    let mut source: &Vec<char> = text;
+
+    for coord in coordinates {
+        if in_entity {
+            source = &entities[entity_index].html;
+            entity_index += 1;
+        } else {
+            source = text;
+        }
+
+        for i in coord.start..coord.end {
+            sb.push(source[i]);
+        }
+        in_entity = !in_entity;
+    }
+
+    sb
+}
+
 fn main() {
     let result = render(&ASCII_TEXT, &mut entities());
     println!("Result: {}", result);
@@ -128,11 +188,17 @@ pub fn entities() -> Vec<Entity<String>> {
     entities
 }
 
-pub fn decoded_entities() -> Vec<DecodedEntity> {
-    entities().into_iter().map( |e| e.decode() ).collect()
+pub fn decoded_entities(entities: Vec<Entity<String>>) -> Vec<DecodedEntity> {
+    entities.iter().map( |e| {
+        DecodedEntity {
+            start: e.start,
+            end: e.end,
+            html: e.html.chars().collect()
+        }
+    } ).collect()
 }
 
-pub fn entity_refs<'a>(entities: &'a Vec<Entity<String>>) -> Vec<&'a Entity<String>> {
+pub fn entity_refs<'a, T>(entities: &'a Vec<T>) -> Vec<&'a T> {
     entities.into_iter().map( |e| e ).collect()
 }
 
@@ -178,14 +244,14 @@ mod rendertest {
 
     fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
         generate_entities().into_iter().map(|entries| {
-            entries.into_iter().map(|e| { e.decode() } ).collect()
+            decoded_entities(entries)
         }).collect()
     }
 
     #[test]
     fn correctness_chars() {
         let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-        assert_eq!(result, render_chars(&UNICODE_TEXT.chars().collect(), &decoded_entities()))
+        assert_eq!(result, render_chars(&UNICODE_TEXT.chars().collect(), &decoded_entities(entities())))
     }
 
     #[test]
@@ -206,6 +272,40 @@ mod rendertest {
         assert_eq!(result, render_chars_entity_references(&UNICODE_TEXT.chars().collect(), &entity_refs(&entities())))
     }
 
+    #[test]
+    fn correctness_chars_entity_reference_to_chars() {
+        let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+        let chars = render_chars_entity_references_to_chars(&UNICODE_TEXT.chars().collect(), &entity_refs(&decoded_entities(entities())));
+        let s: String = chars.iter().collect();
+        assert_eq!(result, s);
+    }
+
+    #[test]
+    fn correctness_render_steps() {
+        let result = "Attend \u{20000}\u{20000} hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  <http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
+
+        // Decode from UTF-8
+        let decoded = &decoded_entities(entities());
+        let refs = &entity_refs(decoded);
+        let text = &UNICODE_TEXT.chars().collect();
+
+        // Sort entities
+        let mut sorted: Vec<&DecodedEntity> = Vec::with_capacity(refs.len());
+        for e in refs {
+            sorted.push(e);
+        }
+        sorted.sort_unstable();
+
+        // Render coordinates
+        let mut ht = Vec::with_capacity(64);
+        render_coords(&mut ht, text, &sorted);
+
+        // Encode to UTF-8
+        let s = coordinates_to_utf8(&ht, text, &sorted);
+
+        assert_eq!(result, s);
+    }
+
     #[bench]
     fn bench_replacement(b: &mut Bencher) {
         let entities_list = generate_entities();
@@ -222,7 +322,7 @@ mod rendertest {
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
-            render_chars(&decoded_text, &entities_list[option.unwrap()].clone())
+            render_chars(&decoded_text, &entities_list[option.unwrap()])
         });
     }
 
@@ -249,6 +349,47 @@ mod rendertest {
         b.iter(|| {
             let option = index_iter.next();
             render_chars_entity_references(&decoded_text, &refs[option.unwrap()])
+        });
+    }
+
+    #[bench]
+    fn bench_replacement_chars_entity_references_to_chars(b: &mut Bencher) {
+        let entities_list = generate_decoded_entities();
+        let mut refs = Vec::with_capacity(1000);
+        for (i, _) in entities_list.iter().enumerate() {
+            refs.push(entity_refs(&entities_list[i]));
+        }
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
+        b.iter(|| {
+            let option = index_iter.next();
+            render_chars_entity_references_to_chars(&decoded_text, &refs[option.unwrap()])
+        });
+    }
+
+    // Benchmark only sorting entities and determining substitutions.
+    #[bench]
+    fn bench_render_coords(b: &mut Bencher) {
+        let entities_list = generate_decoded_entities();
+        let mut refs = Vec::with_capacity(1000);
+        for (i, _) in entities_list.iter().enumerate() {
+            refs.push(entity_refs(&entities_list[i]));
+        }
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
+        let mut ht = Vec::with_capacity(64);
+
+        b.iter(|| {
+            let option = index_iter.next();
+            ht.clear();
+            // Sort entities
+            let refs = &refs[option.unwrap()];
+            let mut sorted: Vec<&DecodedEntity> = Vec::with_capacity(refs.len());
+            for e in refs {
+                sorted.push(e);
+            }
+            sorted.sort_unstable();
+            render_coords(&mut ht, &decoded_text, &sorted);
         });
     }
 }
