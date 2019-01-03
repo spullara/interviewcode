@@ -6,3 +6,7 @@ authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
 [dev-dependencies]
 rand = "*"
+
+[profile.release]
+lto = true
+codegen-units = 1

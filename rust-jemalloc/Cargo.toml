@@ -9,3 +9,7 @@ rand = "*"
 
 [dependencies]
 jemallocator = "0.1.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
