@@ -40,9 +40,9 @@ impl PartialOrd for DecodedEntity {
     }
 }
 
-fn render(text: &str, entities: &Vec<Entity<String>>) -> String {
+fn render(text: &str, entities: &[Entity<String>]) -> String {
     let mut sb = String::with_capacity(text.len()*2);
-    let mut my_entities = entities.clone();
+    let mut my_entities = entities.to_owned();
     my_entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
@@ -59,7 +59,7 @@ fn render(text: &str, entities: &Vec<Entity<String>>) -> String {
 
 fn render_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
     let mut sb: Vec<char> = Vec::with_capacity(text.len()*2);
-    let mut my_entities = entities.clone();
+    let mut my_entities = entities.to_owned();
     my_entities.sort_by(|e1, e2| e1.start.cmp(&e2.start) );
 
     let mut pos = 0 as usize;
@@ -73,19 +73,19 @@ fn render_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
 }
 
 fn render_chars2(text: &Vec<char>, entities: &Vec<Entity<String>>) -> String {
-    let mut my_entities = entities.clone();
+    let mut my_entities = entities.to_owned();
     my_entities.sort();
     let mut sb = String::with_capacity(text.len()*2);
     let mut pos = 0 as usize;
     for entity in my_entities {
-        for i in pos..entity.start {
-            sb.push(text[i]);
+        for item in text.iter().take(entity.start).skip(pos) {
+            sb.push(*item);
         }
         sb.push_str(&entity.html);
         pos = entity.end;
     }
-    for i in pos..text.len() {
-        sb.push(text[i]);
+    for item in text.iter().skip(pos) {
+        sb.push(*item);
     }
     sb
 }
@@ -100,14 +100,14 @@ fn render_chars_entity_references(text: &Vec<char>, entities: &Vec<&Entity<Strin
     let mut sb = String::with_capacity(text.len()*2);
     let mut pos = 0 as usize;
     for entity in my_entities {
-        for i in pos..entity.start {
-            sb.push(text[i]);
+        for item in text.iter().take(entity.start).skip(pos) {
+            sb.push(*item);
         }
         sb.push_str(&entity.html);
         pos = entity.end;
     }
-    for i in pos..text.len() {
-        sb.push(text[i]);
+   for item in text.iter().skip(pos) {
+        sb.push(*item);
     }
     sb
 }
@@ -161,8 +161,8 @@ fn coordinates_to_utf8(coordinates: &Vec<Coord>, text: &Vec<char>, entities: &Ve
             source = text;
         }
 
-        for i in coord.start..coord.end {
-            sb.push(source[i]);
+        for item in source.iter().take(coord.end).skip(coord.start) {
+            sb.push(*item);
         }
         in_entity = !in_entity;
     }
@@ -171,7 +171,7 @@ fn coordinates_to_utf8(coordinates: &Vec<Coord>, text: &Vec<char>, entities: &Ve
 }
 
 fn main() {
-    let result = render(&ASCII_TEXT, &mut entities());
+    let result = render(&ASCII_TEXT, &entities());
     println!("Result: {}", result);
 }
 
@@ -199,7 +199,7 @@ pub fn decoded_entities(entities: Vec<Entity<String>>) -> Vec<DecodedEntity> {
 }
 
 pub fn entity_refs<'a, T>(entities: &'a Vec<T>) -> Vec<&'a T> {
-    entities.into_iter().map( |e| e ).collect()
+    entities.iter().map( |e| e ).collect()
 }
 
 #[cfg(test)] extern crate rand;
