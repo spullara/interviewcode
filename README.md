@@ -103,7 +103,7 @@ Memory: ArrayScan: 1003 bytes/op
 # Rust Results
 
 ```
-interviewcode sam$ cargo bench
+interviewcode sam$ CARGO_INCREMENTAL="0" cargo bench
      Running target/release/interviewcode-d8a656227704114f
 
 running 6 tests
