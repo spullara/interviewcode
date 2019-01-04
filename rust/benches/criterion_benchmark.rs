@@ -55,18 +55,18 @@ fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
 // Actual benchmarks start here
 
 fn bench_replacement(c: &mut Criterion) {
-    let entities_list = generate_entities();
-    let mut index_iter = (0..1000).into_iter().cycle();
-    c.bench_function("replacement", move |b| {
+    c.bench_function("replacement", |b| {
+        let entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
         b.iter(|| render(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()]))
     });
 }
 
 fn bench_replacement_chars(c: &mut Criterion) {
-    let entities_list = generate_decoded_entities();
-    let mut index_iter = (0..1000).into_iter().cycle();
-    let decoded_text = UNICODE_TEXT.chars().collect();
-    c.bench_function("replacement chars", move |b| {
+    c.bench_function("replacement chars", |b| {
+        let entities_list = generate_decoded_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
             render_chars(&decoded_text, &entities_list[option.unwrap()])
@@ -75,10 +75,10 @@ fn bench_replacement_chars(c: &mut Criterion) {
 }
 
 fn bench_replacement_chars2(c: &mut Criterion) {
-    let entities_list = generate_entities();
-    let mut index_iter = (0..1000).into_iter().cycle();
-    let decoded_text = UNICODE_TEXT.chars().collect();
-    c.bench_function("replacement chars 2", move |b| {
+    c.bench_function("replacement chars 2", |b| {
+        let entities_list = generate_entities();
+        let mut index_iter = (0..1000).into_iter().cycle();
+        let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
             render_chars2(&decoded_text, &entities_list[option.unwrap()])
@@ -87,7 +87,7 @@ fn bench_replacement_chars2(c: &mut Criterion) {
 }
 
 fn bench_replacement_chars_entity_references(c: &mut Criterion) {
-    c.bench_function("replacement chars entity references", move |b| {
+    c.bench_function("replacement chars entity references", |b| {
         let entities_list = generate_entities();
         let mut refs = Vec::with_capacity(1000);
         for (i, _) in entities_list.iter().enumerate() {
@@ -103,7 +103,7 @@ fn bench_replacement_chars_entity_references(c: &mut Criterion) {
 }
 
 fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
-    c.bench_function("replacement chars entity references to chars", move |b| {
+    c.bench_function("replacement chars entity references to chars", |b| {
         let entities_list = generate_decoded_entities();
         let mut refs = Vec::with_capacity(1000);
         let mut index_iter = (0..1000).into_iter().cycle();
@@ -120,7 +120,7 @@ fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
 
 // Benchmark only sorting entities and determining substitutions.
 fn bench_render_coords(c: &mut Criterion) {
-    c.bench_function("render coords", move |b| {
+    c.bench_function("render coords", |b| {
         let entities_list = generate_decoded_entities();
         let mut refs = Vec::with_capacity(1000);
         for (i, _) in entities_list.iter().enumerate() {
