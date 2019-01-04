@@ -247,7 +247,7 @@ pub fn decoded_entities(entities: Vec<Entity<String>>) -> Vec<DecodedEntity> {
         .collect()
 }
 
-pub fn entity_refs<'a, T>(entities: &'a Vec<T>) -> Vec<&'a T> {
+pub fn entity_refs<T>(entities: &Vec<T>) -> Vec<&T> {
     entities.iter().map(|e| e).collect()
 }
 
