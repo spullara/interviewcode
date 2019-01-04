@@ -6,7 +6,12 @@ authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
 [dev-dependencies]
 rand = "*"
+criterion = "0.2"
 
 [profile.release]
 lto = true
 codegen-units = 1
+
+[[bench]]
+name = "criterion_benchmark"
+harness = false

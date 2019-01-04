@@ -6,6 +6,7 @@ authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
 [dev-dependencies]
 rand = "*"
+criterion = "0.2"
 
 [dependencies]
 jemallocator = "0.1.8"
@@ -13,3 +14,7 @@ jemallocator = "0.1.8"
 [profile.release]
 lto = true
 codegen-units = 1
+
+[[bench]]
+name = "criterion_benchmark"
+harness = false
