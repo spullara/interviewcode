@@ -49,11 +49,10 @@ pub fn render(text: &str, entities: &Vec<Entity<String>>) -> String {
     my_entities.sort_by(|e1, e2| e1.start.cmp(&e2.start));
 
     let mut pos = 0 as usize;
-    for entity in my_entities {
+    my_entities.iter().for_each(|entity| {
         sb.extend(text.chars().skip(pos).take(entity.start - pos));
         sb.push_str(entity.html.as_str());
-        pos = entity.end;
-    }
+        pos = entity.end;});
     for c in text.chars().skip(pos).take(text.chars().count() - pos) {
         sb.push(c);
     }
@@ -66,11 +65,11 @@ pub fn render_chars(text: &Vec<char>, entities: &Vec<DecodedEntity>) -> String {
     my_entities.sort_by(|e1, e2| e1.start.cmp(&e2.start));
 
     let mut pos = 0 as usize;
-    for entity in my_entities {
+    my_entities.iter().for_each(|entity| {
         sb.extend_from_slice(&text[pos..entity.start]);
         sb.extend_from_slice(&entity.html);
         pos = entity.end;
-    }
+    });
     sb.extend_from_slice(&text[pos..text.len()]);
     sb.into_iter().collect() // <-- UTF-8 encoding
 }
@@ -80,13 +79,13 @@ pub fn render_chars2(text: &Vec<char>, entities: &Vec<Entity<String>>) -> String
     my_entities.sort();
     let mut sb = String::with_capacity(text.len() * 2);
     let mut pos = 0 as usize;
-    for entity in my_entities {
+    my_entities.iter().for_each(|entity| {
         for item in text.iter().take(entity.start).skip(pos) {
             sb.push(*item);
         }
         sb.push_str(&entity.html);
         pos = entity.end;
-    }
+    });
     for item in text.iter().skip(pos) {
         sb.push(*item);
     }
@@ -102,13 +101,13 @@ pub fn render_chars_entity_references(text: &Vec<char>, entities: &Vec<&Entity<S
 
     let mut sb = String::with_capacity(text.len() * 2);
     let mut pos = 0 as usize;
-    for entity in my_entities {
+    my_entities.iter().for_each(|entity| {
         for item in text.iter().take(entity.start).skip(pos) {
             sb.push(*item);
         }
         sb.push_str(&entity.html);
         pos = entity.end;
-    }
+    });
     for item in text.iter().skip(pos) {
         sb.push(*item);
     }
@@ -127,11 +126,11 @@ pub fn render_chars_entity_references_to_chars(
 
     let mut sb: Vec<char> = Vec::with_capacity(text.len() * 2);
     let mut pos = 0 as usize;
-    for entity in my_entities {
+    my_entities.iter().for_each(|entity| {
         sb.extend_from_slice(&text[pos..entity.start]);
         sb.extend_from_slice(&entity.html);
         pos = entity.end;
-    }
+    });
     sb.extend_from_slice(&text[pos..text.len()]);
     sb
 }
@@ -148,7 +147,7 @@ pub fn render_coords(
     entities: &Vec<&DecodedEntity>,
 ) {
     let mut pos = 0 as usize;
-    for entity in entities {
+    entities.iter().for_each(|entity| {
         coordinates.push(Coord {
             start: pos,
             end: entity.start,
@@ -158,7 +157,7 @@ pub fn render_coords(
             end: entity.html.len(),
         });
         pos = entity.end;
-    }
+    });
     coordinates.push(Coord {
         start: pos,
         end: text.len(),
@@ -258,7 +257,6 @@ pub fn entity_refs<'a, T>(entities: &'a Vec<T>) -> Vec<&'a T> {
 extern crate test;
 mod rendertest {
     use super::*;
-    use rand::{self, Rng};
 
     #[test]
     fn correctness_chars() {
