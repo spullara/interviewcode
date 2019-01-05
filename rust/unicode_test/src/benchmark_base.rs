@@ -1,18 +1,15 @@
-#[macro_use]
-extern crate criterion;
-use criterion::Criterion;
-
-extern crate interviewcode;
-use interviewcode::{
+// These functions are re-exported as public from lib.rs
+// this makes them available to the benchmark crates in the workspace
+use super::rand::Rng;
+use super::criterion::Criterion;
+use super::{
     decoded_entities, entity_refs, render, render_chars, render_chars2,
     render_chars_entity_references, render_chars_entity_references_to_chars, render_coords,
     DecodedEntity, Entity, ASCII_TEXT, UNICODE_TEXT,
 };
 
-extern crate rand;
-use rand::Rng;
-
-fn generate_entities() -> Vec<Vec<Entity<String>>> {
+// Benchmark functions
+pub fn generate_entities() -> Vec<Vec<Entity<String>>> {
     let mut rng = rand::thread_rng();
     let mut entities_list: Vec<Vec<Entity<String>>> = Vec::with_capacity(1000);
 
@@ -45,16 +42,14 @@ fn generate_entities() -> Vec<Vec<Entity<String>>> {
     entities_list
 }
 
-fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
+pub fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
     generate_entities()
         .into_iter()
         .map(|entries| decoded_entities(entries))
         .collect()
 }
 
-// Actual benchmarks start here
-
-fn bench_replacement(c: &mut Criterion) {
+pub fn bench_replacement(c: &mut Criterion) {
     c.bench_function("replacement", |b| {
         let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
@@ -62,7 +57,7 @@ fn bench_replacement(c: &mut Criterion) {
     });
 }
 
-fn bench_replacement_chars(c: &mut Criterion) {
+pub fn bench_replacement_chars(c: &mut Criterion) {
     c.bench_function("replacement chars", |b| {
         let entities_list = generate_decoded_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
@@ -74,7 +69,7 @@ fn bench_replacement_chars(c: &mut Criterion) {
     });
 }
 
-fn bench_replacement_chars2(c: &mut Criterion) {
+pub fn bench_replacement_chars2(c: &mut Criterion) {
     c.bench_function("replacement chars 2", |b| {
         let entities_list = generate_entities();
         let mut index_iter = (0..1000).into_iter().cycle();
@@ -86,7 +81,7 @@ fn bench_replacement_chars2(c: &mut Criterion) {
     });
 }
 
-fn bench_replacement_chars_entity_references(c: &mut Criterion) {
+pub fn bench_replacement_chars_entity_references(c: &mut Criterion) {
     c.bench_function("replacement chars entity references", |b| {
         let entities_list = generate_entities();
         let mut refs = Vec::with_capacity(1000);
@@ -102,7 +97,7 @@ fn bench_replacement_chars_entity_references(c: &mut Criterion) {
     });
 }
 
-fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
+pub fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
     c.bench_function("replacement chars entity references to chars", |b| {
         let entities_list = generate_decoded_entities();
         let mut refs = Vec::with_capacity(1000);
@@ -119,7 +114,7 @@ fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
 }
 
 // Benchmark only sorting entities and determining substitutions.
-fn bench_render_coords(c: &mut Criterion) {
+pub fn bench_render_coords(c: &mut Criterion) {
     c.bench_function("render coords", |b| {
         let entities_list = generate_decoded_entities();
         let mut refs = Vec::with_capacity(1000);
@@ -144,14 +139,3 @@ fn bench_render_coords(c: &mut Criterion) {
         })
     });
 }
-
-criterion_group!(
-    benches,
-    bench_replacement,
-    bench_replacement_chars,
-    bench_replacement_chars2,
-    bench_replacement_chars_entity_references,
-    bench_replacement_chars_entity_references_to_chars,
-    bench_render_coords
-);
-criterion_main!(benches);

@@ -1,0 +1,12 @@
+[package]
+
+name = "unicode_test"
+version = "0.0.1"
+authors = [ "Sam Pullara <sam@sampullara.com>" ]
+
+[dev-dependencies]
+rand = "*"
+
+[dependencies]
+criterion = "0.2"
+rand = "*"
