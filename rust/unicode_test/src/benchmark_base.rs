@@ -1,7 +1,7 @@
 // These functions are re-exported as public from lib.rs
 // this makes them available to the benchmark crates in the workspace
-use super::rand::Rng;
 use super::criterion::Criterion;
+use super::rand::Rng;
 use super::{
     decoded_entities, entity_refs, render, render_chars, render_chars2,
     render_chars_entity_references, render_chars_entity_references_to_chars, render_coords,
