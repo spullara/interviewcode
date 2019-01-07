@@ -5,7 +5,3 @@ members = [
     "benchmarks_system",
     "benchmarks_jemalloc"
 ]
-
-[profile.release]
-lto = true
-codegen-units = 1
