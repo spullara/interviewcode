@@ -1,0 +1,12 @@
+[package]
+name = "benchmarks_system"
+version = "0.1.0"
+authors = ["Stephan Hügel <urschrei@gmail.com>"]
+
+[dependencies]
+unicode_test = { path = "../unicode_test" }
+criterion = "0.2"
+
+[[bench]]
+name = "criterion_benchmark"
+harness = false

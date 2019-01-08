@@ -1,6 +1,6 @@
 [package]
 
-name = "interviewcode"
+name = "unicode_test"
 version = "0.0.1"
 authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
@@ -8,4 +8,5 @@ authors = [ "Sam Pullara <sam@sampullara.com>" ]
 rand = "*"
 
 [dependencies]
-jemallocator = "0.1.8"
+criterion = "0.2"
+rand = "*"
