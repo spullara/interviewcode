@@ -1,7 +1,7 @@
 // These functions are re-exported as public from lib.rs
 // this makes them available to the benchmark crates in the workspace
-use super::rand::Rng;
 use super::criterion::Criterion;
+use super::rand::Rng;
 use super::{
     decoded_entities, entity_refs, render, render_chars, render_chars2,
     render_chars_entity_references, render_chars_entity_references_to_chars, render_coords,
@@ -31,8 +31,8 @@ pub fn generate_entities() -> Vec<Vec<Entity<String>>> {
             let (start, end) = (chunk[0], chunk[1]);
             let length = end - start;
             Entity {
-                start: start,
-                end: end,
+                start,
+                end,
                 html: (0..length).map(|_| "X").collect(),
             }
         });
@@ -45,14 +45,14 @@ pub fn generate_entities() -> Vec<Vec<Entity<String>>> {
 pub fn generate_decoded_entities() -> Vec<Vec<DecodedEntity>> {
     generate_entities()
         .into_iter()
-        .map(|entries| decoded_entities(entries))
+        .map(decoded_entities)
         .collect()
 }
 
 pub fn bench_replacement(c: &mut Criterion) {
     c.bench_function("replacement", |b| {
         let entities_list = generate_entities();
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         b.iter(|| render(UNICODE_TEXT, &entities_list[index_iter.next().unwrap()]))
     });
 }
@@ -60,7 +60,7 @@ pub fn bench_replacement(c: &mut Criterion) {
 pub fn bench_replacement_chars(c: &mut Criterion) {
     c.bench_function("replacement chars", |b| {
         let entities_list = generate_decoded_entities();
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
@@ -72,7 +72,7 @@ pub fn bench_replacement_chars(c: &mut Criterion) {
 pub fn bench_replacement_chars2(c: &mut Criterion) {
     c.bench_function("replacement chars 2", |b| {
         let entities_list = generate_entities();
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
@@ -88,7 +88,7 @@ pub fn bench_replacement_chars_entity_references(c: &mut Criterion) {
         for (i, _) in entities_list.iter().enumerate() {
             refs.push(entity_refs(&entities_list[i]));
         }
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         b.iter(|| {
             let option = index_iter.next();
@@ -101,7 +101,7 @@ pub fn bench_replacement_chars_entity_references_to_chars(c: &mut Criterion) {
     c.bench_function("replacement chars entity references to chars", |b| {
         let entities_list = generate_decoded_entities();
         let mut refs = Vec::with_capacity(1000);
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         for (i, _) in entities_list.iter().enumerate() {
             refs.push(entity_refs(&entities_list[i]));
@@ -121,7 +121,7 @@ pub fn bench_render_coords(c: &mut Criterion) {
         for (i, _) in entities_list.iter().enumerate() {
             refs.push(entity_refs(&entities_list[i]));
         }
-        let mut index_iter = (0..1000).into_iter().cycle();
+        let mut index_iter = (0..1000).cycle();
         let decoded_text = UNICODE_TEXT.chars().collect();
         let mut ht = Vec::with_capacity(64);
 
