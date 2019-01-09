@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -82,15 +83,16 @@ func render(text string, entities map[Entity]bool) string {
 		}
 		return false
 	})
-	sb := ""
+	sb := strings.Builder{}
+	sb.Grow(len(text) * 2)
 	pos := 0
 	for i := range keys {
-		sb += text[pos : keys[i].start]
-		sb += keys[i].html
+		sb.WriteString(text[pos : keys[i].start])
+		sb.WriteString(keys[i].html)
 		pos = keys[i].end
 	}
-	sb += text[pos:]
-	return sb
+	sb.WriteString(text[pos:])
+	return sb.String()
 }
 
 func main() {
