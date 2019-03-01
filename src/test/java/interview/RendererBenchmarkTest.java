@@ -130,7 +130,7 @@ public class RendererBenchmarkTest {
     List<Set<Entity>> entitiesList = createEntriesList();
 
     {
-      for (int j = 0; j < 5; j++) {
+      for (int j = 0; j < 10; j++) {
         for (int i = 0; i < 10000; i++) {
           renderer.render(text, entitiesList.get(i % 1000));
         }

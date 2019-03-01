@@ -2,13 +2,9 @@ package interviewkotlin
 
 import interview.Entity
 import interview.Renderer
+import java.util.*
 
-import java.util.Arrays
-
-/**
- * The classic solution.
- */
-public class KotlinStringBuilderReplaceWithCodePoints : Renderer {
+class KotlinStringBuilderReplaceWithCodePoints : Renderer {
 
     override fun render(text: CharSequence, entities: Set<Entity>): CharSequence {
         val array = entities.toTypedArray()

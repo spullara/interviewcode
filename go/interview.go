@@ -103,7 +103,7 @@ func main() {
 
 	entitiesList := createEntityList()
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		start := time.Now().UnixNano()
 		total := 1000000
 		for j := 0; j < total; j++ {
