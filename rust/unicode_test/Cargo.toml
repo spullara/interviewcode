@@ -4,9 +4,12 @@ name = "unicode_test"
 version = "0.0.1"
 authors = [ "Sam Pullara <sam@sampullara.com>" ]
 
-[dev-dependencies]
-rand = "*"
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
 criterion = "0.2"
-rand = "*"
+rand = "0.7.3"
+rand_os = {version = "0.1.0", features = ["wasm-bindgen"]}
+same-file = "1.0.6"
+wasm-bindgen = "0.2.78"

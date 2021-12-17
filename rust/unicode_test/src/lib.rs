@@ -1,4 +1,4 @@
-#![cfg_attr(test, feature(test))]
+#![cfg_attr(test)]
 
 use std::cmp::Ordering;
 extern crate criterion;
@@ -192,6 +192,7 @@ pub fn coordinates_to_utf8(
     sb
 }
 
+#[wasm_bindgen]
 fn main() {
     let result = render(&ASCII_TEXT, &entities());
     println!("Result: {}", result);

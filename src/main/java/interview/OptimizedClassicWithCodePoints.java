@@ -1,20 +1,22 @@
 package interview;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * The classic solution.
  */
 public class OptimizedClassicWithCodePoints implements Renderer {
   public CharSequence render(CharSequence text, Set<Entity> entities) {
-    StringBuilder sb = new StringBuilder(text.length() * 2);
-    List<Entity> list = new ArrayList<>(entities);
+    var list = new ArrayList<>(entities);
     Collections.sort(list);
-    String s = text.toString();
-    int pos = 0;
-    int codePointPosition = 0;
-    for (Entity entity : list) {
-      int start = s.offsetByCodePoints(pos, entity.start - codePointPosition);
+    var sb = new StringBuilder(text.length() * 2);
+    var s = text.toString();
+    var pos = 0;
+    var codePointPosition = 0;
+    for (var entity : list) {
+      var start = s.offsetByCodePoints(pos, entity.start - codePointPosition);
       sb.append(s, pos, start);
       sb.append(entity.html);
       codePointPosition = entity.end;
