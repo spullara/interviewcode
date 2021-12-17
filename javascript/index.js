@@ -44,8 +44,36 @@ function render(text, unsortedEntities) {
     let result = '';
     const arr = Array.from(text)
     const arrLen = arr.length
-    let hasEntities = entities.length !== 0
+    let pos = 0
+    OUTER:
+    for (let entity of entities) {
+        const start = entity.start;
+        for (; pos < arrLen; pos++) {
+            // If this is the start of an entity add it to the result
+            if (start === pos) {
+                result += entity.html;
+                pos = entity.end;
+                continue OUTER;
+            }
+            result += arr[pos]
+        }
+    }
+    for (; pos < arrLen; pos++) {
+        result += arr[pos]
+    }
+    return result;
+}
+
+function renderMark(text, unsortedEntities) {
+    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+
+    let result = '';
+    const arr = Array.from(text)
+    const arrLen = arr.length
+    // let entityNum = 0
+
     let i = 0
+
     if (entities.length) {
         for (; i < arrLen; i++) {
             let didAddEntity = false
@@ -56,20 +84,25 @@ function render(text, unsortedEntities) {
                 i = entity.end - 1
                 didAddEntity = true
                 if (!entities.length) {
-                    hasEntities = false
                     break
                 }
             }
+
             if (didAddEntity) {
-                if (entities.length === 0) break
+                if (entities.length === 0) {
+                    i++;
+                    break
+                }
             } else {
                 result += arr[i]
             }
         }
     }
+
     for (; i < arrLen; i++) {
         result += arr[i]
     }
+
     return result
 }
 
@@ -78,7 +111,7 @@ function bench(name, func) {
         "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     const entitiesList = createEntriesList();
 
-    for (var j = 0; j < 10; j++) {
+    for (var j = 0; j < 2; j++) {
         for (var i = 0; i < 10000; i++) {
             func(text, entitiesList[i % 1000]);
         }
@@ -91,11 +124,12 @@ function bench(name, func) {
     }
 }
 
-const rendered = render(text, getEntities());
-console.log(rendered);
+console.log(renderMark(text, getEntities()));
 
 const expected = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  " +
     "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
-console.log(rendered === expected);
+console.log(renderMark(text, getEntities()) === expected);
+console.log(render(text, getEntities()) === expected);
 
+bench("render by mark", renderMark);
 bench("render by character", render);
