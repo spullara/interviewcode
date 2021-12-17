@@ -39,55 +39,43 @@ function createEntriesList() {
     return entitiesList;
 }
 
-function render(text, entities) {
-    entities.sort((o1, o2) => o1.start - o2.start);
-    let pos = 0;
-    let entityNum = 0;
-    let result = "";
-    let skip = 0;
-    // Loop over the code points of the text.
-    for (let c of text) {
-        // If this is in an entity, skip it.
-        if (skip > 0) {
-            skip--;
-            continue;
+function render(text, unsortedEntities) {
+    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+    let result = '';
+    const codepoints = Array.from(text)
+    const length = codepoints.length;
+    let hasEntities = entities.length;
+    OUTER:
+    for (let i = 0; i < length; i++) {
+        // If this is the start of an entity add it to the result
+        while (hasEntities && entities[0].start === i) {
+            const entity = entities.shift();
+            hasEntities = entities.length;
+            result += entity.html;
+            i = entity.end - 1;
+            continue OUTER;
         }
-        // Make sure we have more entities to process.
-        if (entities.length > entityNum) {
-            const entity = entities[entityNum];
-            const start = entity.start;
-            // If this is the start of an entity add it to the result.
-            if (pos === start) {
-                const end = entity.end;
-                result += entity.html;
-                entityNum++;
-                // We already skipped the first one
-                skip = end - start - 1;
-                pos = end;
-                continue;
-            }
-        }
-        result += c;
-        pos++;
+        result += codepoints[i]
     }
+
     return result;
 }
 
-function bench() {
+function bench(name, func) {
     const text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
         "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     const entitiesList = createEntriesList();
 
     for (var j = 0; j < 10; j++) {
         for (var i = 0; i < 10000; i++) {
-            render(text, entitiesList[i % 1000]);
+            func(text, entitiesList[i % 1000]);
         }
         const start = new Date().getTime();
         for (i = 0; i < 1000000; i++) {
-            render(text, entitiesList[i % 1000]);
+            func(text, entitiesList[i % 1000]);
         }
         let elapsed = new Date().getTime() - start;
-        console.log("Time: " + elapsed + "ns per render");
+        console.log(name + ": " + elapsed + "ns per render");
     }
 }
 
@@ -97,4 +85,4 @@ const expected = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entr
     "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 console.log(rendered === expected);
 
-bench();
+bench("render by character", render);
