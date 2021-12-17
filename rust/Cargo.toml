@@ -2,8 +2,7 @@
 
 members = [
     "unicode_test",
-    "benchmarks_system",
-    "benchmarks_jemalloc"
+    "benchmarks_system"
 ]
 
 [profile.release]

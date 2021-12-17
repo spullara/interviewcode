@@ -42,23 +42,35 @@ function createEntriesList() {
 function render(text, unsortedEntities) {
     const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
     let result = '';
-    const codepoints = Array.from(text)
-    const length = codepoints.length;
-    let hasEntities = entities.length;
-    OUTER:
-    for (let i = 0; i < length; i++) {
-        // If this is the start of an entity add it to the result
-        while (hasEntities && entities[0].start === i) {
-            const entity = entities.shift();
-            hasEntities = entities.length;
-            result += entity.html;
-            i = entity.end - 1;
-            continue OUTER;
+    const arr = Array.from(text)
+    const arrLen = arr.length
+    let hasEntities = entities.length !== 0
+    let i = 0
+    if (entities.length) {
+        for (; i < arrLen; i++) {
+            let didAddEntity = false
+            // If this is the start of an entity add it to the result
+            while (entities[0].start === i) {
+                const entity = entities.shift();
+                result += entity.html;
+                i = entity.end - 1
+                didAddEntity = true
+                if (!entities.length) {
+                    hasEntities = false
+                    break
+                }
+            }
+            if (didAddEntity) {
+                if (entities.length === 0) break
+            } else {
+                result += arr[i]
+            }
         }
-        result += codepoints[i]
     }
-
-    return result;
+    for (; i < arrLen; i++) {
+        result += arr[i]
+    }
+    return result
 }
 
 function bench(name, func) {
@@ -81,6 +93,7 @@ function bench(name, func) {
 
 const rendered = render(text, getEntities());
 console.log(rendered);
+
 const expected = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  " +
     "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 console.log(rendered === expected);
