@@ -64,8 +64,34 @@ function render(text, unsortedEntities) {
     return result;
 }
 
+function renderInvert(text, unsortedEntities) {
+    const entities = [...unsortedEntities.sort((o1, o2) => o1.start - o2.start)];
+    let result = '';
+    let entity = entities.shift();
+    if (!entity) return text;
+    let start = entity.start;
+    const codePoints = Array.from(text);
+    const length = codePoints.length;
+    for (let pos = 0; pos < length; pos++) {
+        if (start === pos) {
+            result += entity.html;
+            pos = entity.end - 1;
+            entity = entities.shift();
+            if (entity) {
+                start = entity.start;
+            } else {
+                start = -1;
+            }
+        } else {
+            result += codePoints[pos];
+        }
+    }
+    return result;
+}
+
+
 function renderMark(text, unsortedEntities) {
-    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+    const entities = [...unsortedEntities.sort((o1, o2) => o1.start - o2.start)];
 
     let result = '';
     const arr = Array.from(text)
@@ -105,26 +131,6 @@ function renderMark(text, unsortedEntities) {
 
     return result
 }
-
-/*
-  public CharSequence render(CharSequence text, Set<Entity> entities) {
-    var list = new ArrayList<>(entities);
-    Collections.sort(list);
-    var sb = new StringBuilder(text.length() * 2);
-    var s = text.toString();
-    var pos = 0;
-    var codePointPosition = 0;
-    for (var entity : list) {
-      var start = s.offsetByCodePoints(pos, entity.start - codePointPosition);
-      sb.append(s, pos, start);
-      sb.append(entity.html);
-      codePointPosition = entity.end;
-      pos = s.offsetByCodePoints(start, entity.end - entity.start);
-    }
-    sb.append(text, pos, text.length());
-    return sb;
-  }
- */
 
 function offsetByCodePoints(s, index, codePointOffset) {
     const length = s.length;
@@ -166,7 +172,7 @@ function bench(name, func) {
         "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     const entitiesList = createEntriesList();
 
-    for (var j = 0; j < 20; j++) {
+    for (var j = 0; j < 5; j++) {
         for (var i = 0; i < 10000; i++) {
             func(text, entitiesList[i % 1000]);
         }
@@ -179,14 +185,16 @@ function bench(name, func) {
     }
 }
 
-console.log(renderMark(text, getEntities()));
+console.log(renderInvert(text, getEntities()));
 
 const expected = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entrepreneur Idol show 2day,  " +
     "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 console.log(renderMark(text, getEntities()) === expected);
 console.log(render(text, getEntities()) === expected);
 console.log(renderJava(text, getEntities()) === expected);
+console.log(renderInvert(text, getEntities()) === expected);
 
-bench("render by java", renderJava);
+bench("render by invert", renderInvert);
 bench("render by mark", renderMark);
 bench("render by character", render);
+bench("render by java", renderJava);
