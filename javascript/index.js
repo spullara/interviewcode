@@ -45,7 +45,6 @@ function render(text, unsortedEntities) {
     const arr = Array.from(text)
     const arrLen = arr.length
     let pos = 0
-    OUTER:
     for (let entity of entities) {
         const start = entity.start;
         for (; pos < arrLen; pos++) {
@@ -53,9 +52,10 @@ function render(text, unsortedEntities) {
             if (start === pos) {
                 result += entity.html;
                 pos = entity.end;
-                continue OUTER;
+                break;
+            } else {
+                result += arr[pos];
             }
-            result += arr[pos]
         }
     }
     for (; pos < arrLen; pos++) {
@@ -106,12 +106,67 @@ function renderMark(text, unsortedEntities) {
     return result
 }
 
+/*
+  public CharSequence render(CharSequence text, Set<Entity> entities) {
+    var list = new ArrayList<>(entities);
+    Collections.sort(list);
+    var sb = new StringBuilder(text.length() * 2);
+    var s = text.toString();
+    var pos = 0;
+    var codePointPosition = 0;
+    for (var entity : list) {
+      var start = s.offsetByCodePoints(pos, entity.start - codePointPosition);
+      sb.append(s, pos, start);
+      sb.append(entity.html);
+      codePointPosition = entity.end;
+      pos = s.offsetByCodePoints(start, entity.end - entity.start);
+    }
+    sb.append(text, pos, text.length());
+    return sb;
+  }
+ */
+
+function offsetByCodePoints(s, index, codePointOffset) {
+    const length = s.length;
+    let x = index;
+    for (let i = 0; i < length && i < codePointOffset; i++) {
+        const ch = s.charAt(x++);
+        if (ch >= '\ud800' && ch < '\udc00') {
+            const ch1 = s.charAt(x);
+            if (ch1 >= '\udc00' && ch1 < '\ue000') {
+                x++;
+            }
+        }
+    }
+    return x;
+}
+
+function renderJava(text, unsortedEntities) {
+    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+    let result = '';
+    let pos = 0;
+    let codePointPosition = 0;
+    for (let entity of entities) {
+        const start = offsetByCodePoints(text, pos, entity.start - codePointPosition);
+        for (let i = pos; i < start; i++) {
+            result += text[i];
+        }
+        result += entity.html;
+        codePointPosition = entity.end;
+        pos = offsetByCodePoints(text, start, entity.end - entity.start);
+    }
+    for (let i = pos; i < text.length; i++) {
+        result += text[i];
+    }
+    return result;
+}
+
 function bench(name, func) {
     const text = "Attend to hear 6 stellar #mobile #startups at #OF12 Entrepreneur Idol show 2day,  " +
         "http://t.co/HtzEMgAC @TiEcon @sv_entrepreneur @500!";
     const entitiesList = createEntriesList();
 
-    for (var j = 0; j < 2; j++) {
+    for (var j = 0; j < 20; j++) {
         for (var i = 0; i < 10000; i++) {
             func(text, entitiesList[i % 1000]);
         }
@@ -130,6 +185,8 @@ const expected = "Attend to hear 6 stellar <#mobile> <#startups> at <#OF12> Entr
     "<http://t.co/HtzEMgAC> <@TiEcon> <@sv_entrepreneur> <@500>!";
 console.log(renderMark(text, getEntities()) === expected);
 console.log(render(text, getEntities()) === expected);
+console.log(renderJava(text, getEntities()) === expected);
 
+bench("render by java", renderJava);
 bench("render by mark", renderMark);
 bench("render by character", render);
