@@ -40,7 +40,8 @@ function createEntriesList() {
 }
 
 function render(text, unsortedEntities) {
-    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+    const entities = [...unsortedEntities];
+    entities.sort((o1, o2) => o1.start - o2.start);
     let result = '';
     const arr = Array.from(text)
     const arrLen = arr.length
@@ -65,7 +66,8 @@ function render(text, unsortedEntities) {
 }
 
 function renderInvert(text, unsortedEntities) {
-    const entities = [...unsortedEntities.sort((o1, o2) => o1.start - o2.start)];
+    const entities = [...unsortedEntities];
+    entities.sort((o1, o2) => o1.start - o2.start);
     let result = '';
     let entity = entities.shift();
     if (!entity) return text;
@@ -74,8 +76,8 @@ function renderInvert(text, unsortedEntities) {
     const length = codePoints.length;
     for (let pos = 0; pos < length; pos++) {
         if (start === pos) {
-            result += entity.html;
             pos = entity.end - 1;
+            result += entity.html;
             entity = entities.shift();
             if (entity) {
                 start = entity.start;
@@ -91,7 +93,8 @@ function renderInvert(text, unsortedEntities) {
 
 
 function renderMark(text, unsortedEntities) {
-    const entities = [...unsortedEntities.sort((o1, o2) => o1.start - o2.start)];
+    const entities = [...unsortedEntities];
+    entities.sort((o1, o2) => o1.start - o2.start);
 
     let result = '';
     const arr = Array.from(text)
@@ -148,7 +151,8 @@ function offsetByCodePoints(s, index, codePointOffset) {
 }
 
 function renderJava(text, unsortedEntities) {
-    const entities = unsortedEntities.sort((o1, o2) => o1.start - o2.start);
+    const entities = [...unsortedEntities];
+    entities.sort((o1, o2) => o1.start - o2.start);
     let result = '';
     let pos = 0;
     let codePointPosition = 0;
